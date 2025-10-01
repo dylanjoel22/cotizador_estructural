@@ -1,0 +1,6 @@
+# Carpetas de dependencias
+/node_modules
+
+# Archivos de logs y caché
+npm-debug.log*
+.DS_Store
