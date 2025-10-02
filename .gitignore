@@ -1,6 +1,14 @@
-# Carpetas de dependencias
-/node_modules
+# Ignorar carpetas de dependencias
+/frontend/node_modules/
+/venv/
 
-# Archivos de logs y caché
+# Ignorar archivos de Python
+__pycache__/
+*.pyc
+
+# Ignorar archivos de base de datos
+db.sqlite3
+
+# Ignorar archivos de logs y caché
 npm-debug.log*
 .DS_Store

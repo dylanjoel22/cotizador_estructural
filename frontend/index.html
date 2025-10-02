@@ -3,10 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mi Proyecto Frontend</title>
-  </head>
+  <title>Prueba de Tailwind CSS</title>
+</head>
 <body>
-  <h1>¡Hola, mundo! ¡Mi proyecto Vite funciona!</h1>
-  <p>Abre el archivo index.html para empezar a editar.</p>
+
+  <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-xl">
+    
+    <h1 class="text-4xl font-extrabold text-blue-600 text-center mb-4">
+      ¡Tailwind CSS funciona!
+    </h1>
+    <p class="text-xl text-gray-700 text-center mb-8">
+      Si ves esta página con estilos, la configuración es correcta.
+    </p>
+
+    <div class="bg-gray-200 p-4 rounded-md">
+      <ul class="space-y-2">
+        <li class="p-3 bg-red-400 text-white rounded-md">Color de fondo y texto</li>
+        <li class="p-3 bg-green-400 text-white rounded-md">
+          <span class="font-bold">Fuente en negrita</span>
+        </li>
+        <li class="p-3 bg-yellow-400 rounded-md">
+          <span class="italic">Texto en cursiva</span>
+        </li>
+      </ul>
+    </div>
+    <div class="mt-8 text-center">
+      <button class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full transition duration-300">
+        Botón de ejemplo
+      </button>
+    </div>
+
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
 </body>
 </html>
