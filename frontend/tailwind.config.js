@@ -1,13 +1,13 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    // La ruta de tu backend
-    "../main_app/templates/**/*.html",
-    // La ruta de tu archivo de desarrollo
-    "./index.html",
+    // Subir un nivel para encontrar la carpeta 'templates'
+    '../templates/**/*.html',
+    // Buscar dentro de la carpeta 'src'
+    './src/**/*.{js,jsx}',
   ],
   theme: {
     extend: {},
   },
   plugins: [],
-};
+}

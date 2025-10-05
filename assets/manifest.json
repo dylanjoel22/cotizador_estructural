@@ -1,0 +1,11 @@
+{
+  "src/main.js": {
+    "file": "django-assets/main-Daj9OLsB.js",
+    "name": "main",
+    "src": "src/main.js",
+    "isEntry": true,
+    "css": [
+      "django-assets/main-r6CythnO.css"
+    ]
+  }
+}
