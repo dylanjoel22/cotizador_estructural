@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_vite',
     'main_app',
 ]
 
@@ -117,14 +118,19 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
-
 STATICFILES_DIRS = [
-    # Esto le dice a Django que busque la carpeta 'static'
-
-    # dentro de tu aplicación 'main_app'
-    os.path.join(BASE_DIR, 'main_app', 'static'),
+    BASE_DIR / 'assets',
 ]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Configuración de Vite
+DJANGO_VITE = {
+    "default": {
+        "dev_mode": DEBUG
+    }
+}
