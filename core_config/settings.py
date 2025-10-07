@@ -119,7 +119,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
-    BASE_DIR / 'assets',
+    BASE_DIR / 'assets/django-assets',
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
