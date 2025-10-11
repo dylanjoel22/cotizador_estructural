@@ -6,6 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}INMECSUTEC{% endblock %}</title>
 
+  <style>
+    .fouc-hidden {
+      visibility: hidden;
+    }
+  </style>
+
   {% load django_vite %}
   {% vite_hmr_client %}
   {% vite_asset './src/main.js' %}
@@ -14,7 +20,7 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 
-<body class="bg-gray-50 font-sans text-gray-800">
+<body class="fouc-hidden bg-gray-50 font-sans text-gray-800">
 
   <!-- Sidebar -->
   <aside class="fixed left-0 top-0 h-full w-64 bg-blue-900 text-white shadow-xl z-40 flex flex-col">
