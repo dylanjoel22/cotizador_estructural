@@ -1,8 +1,7 @@
 {% extends 'base.html' %}
 {% block page_title %}Nueva Cotización Interna {% endblock %}
+
 {% block content %}
-
-
 
 <div class="max-w-7xl mx-auto p-6 bg-white rounded-xl shadow-lg border border-gray-200">
     <h1 class="text-3xl font-extrabold text-[#002B5B] mb-6 border-b-4 border-[#7CA8D5] pb-3">
@@ -19,18 +18,43 @@
     <form method="POST" id="cotizacionForm">
         {% csrf_token %}
         
-        <div class="mb-8 p-5 border border-gray-200 rounded-lg bg-blue-50/50">
-            <label for="cliente_nombre" class="block text-sm font-bold text-[#002B5B] mb-1">Cliente/Proyecto:</label>
-            <input type="text" name="cliente_nombre" id="cliente_nombre" required
-                   class="w-full border-gray-300 rounded-lg shadow-sm focus:border-[#7CA8D5] focus:ring-[#7CA8D5] p-2 transition-all"
-                   placeholder="E.g., Proyecto Galpón Sur">
+        <h2 class="text-xl font-bold text-[#002B5B] mb-4 flex items-center">
+            <i class="fas fa-address-card mr-2 text-[#7CA8D5]"></i> Información General
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 p-5 border border-gray-200 rounded-lg bg-blue-50/50">
+            <div>
+                <label for="cliente_id" class="block text-sm font-bold text-[#002B5B] mb-1">Cliente:</label>
+                <div class="flex space-x-2">
+                    <select name="cliente_id" id="cliente_id"
+                            class="flex-grow border-gray-300 rounded-lg shadow-sm focus:border-[#7CA8D5] focus:ring-[#7CA8D5] p-2 transition-all">
+                        <option value="">Seleccione un cliente (Opcional)</option>
+                        <option value="1">Cliente A</option>
+                        <option value="2">Cliente B</option>
+                    </select>
+
+                    <a href="{% url 'añadir_cliente' %}" 
+                       target=""
+                       class="flex-shrink-0 px-3 py-2 text-sm font-medium rounded-lg shadow-md text-white bg-amber-500 hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-400 transition duration-150"
+                       title="Agregar nuevo cliente">
+                        <i class="fas fa-user-plus"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div>
+                <label for="proyecto_nombre" class="block text-sm font-bold text-[#002B5B] mb-1">Nombre del Proyecto:</label>
+                <input type="text" name="proyecto_nombre" id="proyecto_nombre" required
+                       class="w-full border-gray-300 rounded-lg shadow-sm focus:border-[#7CA8D5] focus:ring-[#7CA8D5] p-2 transition-all"
+                       placeholder="Ej: Proyecto Galpón Sur">
+            </div>
         </div>
         
-        <h2 class="text-xl font-bold text-[#002B5B] mb-4 flex items-center">
-            <i class="fas fa-boxes mr-2 text-[#7CA8D5]"></i> Detalle de Materiales
+        <h2 class="text-xl font-bold text-[#002B5B] mb-4 mt-6 flex items-center">
+            <i class="fas fa-cubes mr-2 text-[#7CA8D5]"></i> 1. Material Estructural (Metales, Planchas, etc.)
         </h2>
         
-        <div class="overflow-x-auto shadow-xl rounded-lg border border-gray-100">
+        <div class="overflow-x-auto shadow-xl rounded-lg border border-gray-100 mb-4">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-[#002B5B] text-white">
                     <tr>
@@ -47,17 +71,17 @@
                         <th class="px-2 py-3 text-center w-10"></th>
                     </tr>
                 </thead>
-                <tbody id="itemsTableBody" class="bg-white divide-y divide-gray-100">
-                    </tbody>
+                <tbody id="structuralItemsTableBody" class="bg-white divide-y divide-gray-100">
+                </tbody>
                 <tfoot class="bg-gray-100 border-t border-gray-300">
                     <tr>
-                        <td colspan="7" class="px-3 py-3 text-right text-base font-bold text-gray-700">TOTALES:</td>
+                        <td colspan="7" class="px-3 py-3 text-right text-base font-bold text-gray-700">SUBTOTAL ESTRUCTURAL:</td>
                         <td class="px-2 py-3 text-right text-base font-extrabold text-[#002B5B]">
-                            <span id="grandTotalValue">$ 0.00</span>
+                            <span id="structuralTotalValue">$ 0.00</span>
                         </td>
-                        <td colspan="1" class="px-2 py-3 text-right text-base font-bold text-gray-700">PESO:</td>
+                        <td colspan="1" class="px-2 py-3 text-right text-base font-bold text-gray-700">PESO TOTAL:</td>
                         <td class="px-2 py-3 text-right text-base font-extrabold text-[#002B5B]">
-                            <span id="grandTotalWeight">0.000 kg</span>
+                            <span id="structuralTotalWeight">0.000 kg</span>
                         </td>
                         <td></td>
                     </tr>
@@ -65,25 +89,75 @@
             </table>
         </div>
         
-        <button type="button" id="addItemButton"
-                class="mt-4 px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150">
-            <i class="fas fa-plus mr-1"></i> Agregar Material
+        <button type="button" id="addStructuralItemButton"
+                class="mt-2 px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150">
+            <i class="fas fa-plus mr-1"></i> Agregar Material Estructural
         </button>
 
-        <input type="hidden" name="items_json" id="itemsJsonInput">
+        <hr class="my-8 border-gray-200">
+
+        <h2 class="text-xl font-bold text-[#002B5B] mb-4 mt-6 flex items-center">
+            <i class="fas fa-hand-holding-usd mr-2 text-[#7CA8D5]"></i> 2. Insumos y Costos Adicionales (Transporte, Colaciones, etc.)
+        </h2>
+
+        <div class="overflow-x-auto shadow-xl rounded-lg border border-gray-100 mb-4">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-[#002B5B] text-white">
+                    <tr>
+                        <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider min-w-[250px]">Descripción / Concepto</th>
+                        <th class="px-2 py-3 text-center text-xs font-semibold uppercase tracking-wider w-32">Unidad</th>
+                        <th class="px-2 py-3 text-center text-xs font-semibold uppercase tracking-wider w-16">Cantidad</th>
+                        <th class="px-2 py-3 text-right text-xs font-semibold uppercase tracking-wider w-24">Valor Unitario ($)</th>
+                        <th class="px-2 py-3 text-right text-xs font-semibold uppercase tracking-wider w-32">Valor Total ($)</th>
+                        <th class="px-2 py-3 text-center w-10"></th>
+                    </tr>
+                </thead>
+                <tbody id="overheadItemsTableBody" class="bg-white divide-y divide-gray-100">
+                </tbody>
+                <tfoot class="bg-gray-100 border-t border-gray-300">
+                    <tr>
+                        <td colspan="4" class="px-3 py-3 text-right text-base font-bold text-gray-700">SUBTOTAL INSUMOS:</td>
+                        <td class="px-2 py-3 text-right text-base font-extrabold text-[#002B5B]">
+                            <span id="overheadTotalValue">$ 0.00</span>
+                        </td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <button type="button" id="addOverheadItemButton"
+                class="mt-2 px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150">
+            <i class="fas fa-plus mr-1"></i> Agregar Insumo/Costo
+        </button>
+
+        <hr class="my-8 border-gray-400">
+
+        <div class="flex justify-end p-4 bg-yellow-50/50 border-2 border-yellow-200 rounded-lg">
+            <div class="text-right">
+                <p class="text-xl font-bold text-gray-700 mb-2">TOTAL GENERAL DE COSTOS:</p>
+                <p class="text-4xl font-extrabold text-red-600">
+                    <span id="grandTotalGeneral">$ 0.00</span>
+                </p>
+                <input type="hidden" name="total_costo" id="totalCostoInput">
+            </div>
+        </div>
+        
+        <input type="hidden" name="structural_items_json" id="structuralItemsJsonInput">
+        <input type="hidden" name="overhead_items_json" id="overheadItemsJsonInput">
 
         <hr class="my-8 border-gray-200">
 
         <div class="mb-6">
             <label for="notas_internas" class="block text-sm font-bold text-[#002B5B] mb-1">Notas Internas (Para su registro)</label>
             <textarea name="notas_internas" id="notas_internas" rows="4"
-                      class="w-full border-gray-300 rounded-lg shadow-sm focus:border-[#7CA8D5] focus:ring-[#7CA8D5] p-2 transition-all"
-                      placeholder="Ej: Costo unitario basado en proveedor X. Considerar 10% de merma en cortes."></textarea>
+                        class="w-full border-gray-300 rounded-lg shadow-sm focus:border-[#7CA8D5] focus:ring-[#7CA8D5] p-2 transition-all"
+                        placeholder="Ej: Costo unitario basado en proveedor X. Considerar 10% de merma en cortes."></textarea>
         </div>
 
         <div class="flex justify-end">
             <button type="submit"
-                    class="px-8 py-3 text-base font-semibold rounded-lg shadow-xl text-white bg-[#002B5B] hover:bg-[#001E3C] focus:outline-none focus:ring-4 focus:ring-[#7CA8D5] focus:ring-offset-2 focus:ring-offset-white transition duration-200">
+                        class="px-8 py-3 text-base font-semibold rounded-lg shadow-xl text-white bg-[#002B5B] hover:bg-[#001E3C] focus:outline-none focus:ring-4 focus:ring-[#7CA8D5] focus:ring-offset-2 focus:ring-offset-white transition duration-200">
                 <i class="fas fa-save mr-2"></i> Guardar Cotización Cruda
             </button>
         </div>
@@ -91,121 +165,231 @@
 </div>
 
 <script>
-    const itemsTableBody = document.getElementById('itemsTableBody');
-    const addItemButton = document.getElementById('addItemButton');
-    const grandTotalValueSpan = document.getElementById('grandTotalValue');
-    const grandTotalWeightSpan = document.getElementById('grandTotalWeight');
-    const itemsJsonInput = document.getElementById('itemsJsonInput');
+    // --- Referencias a los elementos del DOM ---
+    const structuralItemsTableBody = document.getElementById('structuralItemsTableBody');
+    const overheadItemsTableBody = document.getElementById('overheadItemsTableBody');
+    const addStructuralItemButton = document.getElementById('addStructuralItemButton');
+    const addOverheadItemButton = document.getElementById('addOverheadItemButton');
+
+    const structuralTotalValueSpan = document.getElementById('structuralTotalValue');
+    const structuralTotalWeightSpan = document.getElementById('structuralTotalWeight');
+    const overheadTotalValueSpan = document.getElementById('overheadTotalValue');
+    const grandTotalGeneralSpan = document.getElementById('grandTotalGeneral');
+
+    const structuralItemsJsonInput = document.getElementById('structuralItemsJsonInput');
+    const overheadItemsJsonInput = document.getElementById('overheadItemsJsonInput');
+    const totalCostoInput = document.getElementById('totalCostoInput');
     const form = document.getElementById('cotizacionForm');
     
-    let currentItems = []; 
+    // --- Estructura de Datos (Arrays) ---
+    let structuralItems = []; // Para materiales con peso/dimensiones
+    let overheadItems = [];   // Para insumos, transporte, etc.
+    
+    // --- Funciones de Formateo y Precisión ---
+    
+    // Importante: Usamos una precisión fija de 2 decimales para el valor y 3 para el peso
+    const formatCurrency = (value) => `$ ${Math.round(value).toLocaleString('es-CL', { minimumFractionDigits: 0 })}`;
+    const formatWeight = (value) => `${value.toFixed(3)} kg`;
 
-    function renderItems() {
-        itemsTableBody.innerHTML = '';
-        let grandTotalValue = 0;
-        let grandTotalWeight = 0;
+    // --- Lógica de Renderizado y Cálculo ---
 
-        currentItems.forEach((item, index) => {
+    function calculateTotals() {
+        let structuralTotalValue = 0;
+        let structuralTotalWeight = 0;
+        let overheadTotalValue = 0;
+
+        // 1. Cálculo Estructural
+        structuralItems.forEach(item => {
+            // Usamos Math.round en el total para manejar valores monetarios (sin decimales en CLP)
             const valorTotal = item.cant_a_comprar * item.valor_unitario;
             const pesoTotalKg = item.cant_a_comprar * item.unidad_comercial * item.peso_kg_m;
             
-            grandTotalValue += valorTotal;
-            grandTotalWeight += pesoTotalKg;
+            structuralTotalValue += valorTotal;
+            structuralTotalWeight += pesoTotalKg;
+        });
 
-            const row = itemsTableBody.insertRow();
+        // 2. Cálculo Insumos
+        overheadItems.forEach(item => {
+            const valorTotal = item.cantidad * item.valor_unitario;
+            overheadTotalValue += valorTotal;
+        });
+        
+        // 3. Total General (Redondeamos el total final también)
+        const grandTotal = Math.round(structuralTotalValue + overheadTotalValue);
+
+        // Actualizar el DOM
+        structuralTotalValueSpan.textContent = formatCurrency(structuralTotalValue);
+        structuralTotalWeightSpan.textContent = formatWeight(structuralTotalWeight);
+        overheadTotalValueSpan.textContent = formatCurrency(overheadTotalValue);
+        grandTotalGeneralSpan.textContent = formatCurrency(grandTotal);
+
+        // Actualizar campos ocultos para el envío (solo el número)
+        totalCostoInput.value = grandTotal;
+    }
+    
+    function renderStructuralItems() {
+        structuralItemsTableBody.innerHTML = '';
+        const inputClass = "w-full border-none focus:ring-1 focus:ring-[#7CA8D5] p-0 bg-transparent text-sm rounded-sm transition-all";
+
+        structuralItems.forEach((item, index) => {
+            // Los valores intermedios deben tener más precisión para el cálculo
+            const valorTotal = (item.cant_a_comprar * item.valor_unitario);
+            const pesoTotalKg = (item.cant_a_comprar * item.unidad_comercial * item.peso_kg_m);
+
+            const row = structuralItemsTableBody.insertRow();
             row.className = 'hover:bg-blue-50/50 transition duration-100';
             
-            // Clase base para inputs (estilo para que parezca texto y no input normal)
-            const inputClass = "w-full border-none focus:ring-1 focus:ring-indigo-300 p-0 bg-transparent text-sm rounded-sm";
-            
             row.innerHTML = `
-                <td class="px-3 py-2 text-sm text-gray-900"><input type="text" data-index="${index}" data-field="material_nombre" value="${item.material_nombre}" class="${inputClass}"></td>
-                <td class="px-2 py-2 text-sm text-gray-900"><input type="number" data-index="${index}" data-field="largo_mm" value="${item.largo_mm}" min="0" class="${inputClass} text-center"></td>
-                <td class="px-2 py-2 text-sm text-gray-900"><input type="number" data-index="${index}" data-field="largo_m" value="${item.largo_m}" min="0" step="0.01" class="${inputClass} text-center"></td>
-                <td class="px-2 py-2 text-sm text-gray-900"><input type="number" data-index="${index}" data-field="unidad_comercial" value="${item.unidad_comercial}" min="0" step="0.01" class="${inputClass} text-center"></td>
-                <td class="px-2 py-2 text-sm text-gray-900"><input type="number" data-index="${index}" data-field="cant_necesaria" value="${item.cant_necesaria}" min="1" class="${inputClass} text-center"></td>
-                <td class="px-2 py-2 text-sm text-gray-900"><input type="number" data-index="${index}" data-field="cant_a_comprar" value="${item.cant_a_comprar}" min="1" class="${inputClass} text-center font-bold"></td>
-                <td class="px-2 py-2 text-sm text-gray-900"><input type="number" data-index="${index}" data-field="valor_unitario" value="${item.valor_unitario}" min="0" step="0.01" class="${inputClass} text-right font-semibold text-red-600"></td>
-                <td class="px-2 py-2 text-sm font-bold text-gray-800 text-right">$ ${valorTotal.toLocaleString('es-CL', { minimumFractionDigits: 2 })}</td>
-                <td class="px-2 py-2 text-sm text-gray-900"><input type="number" data-index="${index}" data-field="peso_kg_m" value="${item.peso_kg_m}" min="0" step="0.01" class="${inputClass} text-center"></td>
-                <td class="px-2 py-2 text-sm font-semibold text-gray-800 text-right">${pesoTotalKg.toFixed(3)} kg</td>
+                <td class="px-3 py-2 text-sm text-gray-900"><input type="text" data-type="structural" data-index="${index}" data-field="material_nombre" value="${item.material_nombre}" class="${inputClass}"></td>
+                <td class="px-2 py-2 text-sm text-gray-900"><input type="number" data-type="structural" data-index="${index}" data-field="largo_mm" value="${item.largo_mm}" min="0" class="${inputClass} text-center"></td>
+                <td class="px-2 py-2 text-sm text-gray-900"><input type="number" data-type="structural" data-index="${index}" data-field="largo_m" value="${item.largo_m.toFixed(2)}" min="0" step="0.01" class="${inputClass} text-center"></td>
+                <td class="px-2 py-2 text-sm text-gray-900"><input type="number" data-type="structural" data-index="${index}" data-field="unidad_comercial" value="${item.unidad_comercial.toFixed(2)}" min="0" step="0.01" class="${inputClass} text-center"></td>
+                <td class="px-2 py-2 text-sm text-gray-900"><input type="number" data-type="structural" data-index="${index}" data-field="cant_necesaria" value="${item.cant_necesaria}" min="1" class="${inputClass} text-center"></td>
+                <td class="px-2 py-2 text-sm text-gray-900"><input type="number" data-type="structural" data-index="${index}" data-field="cant_a_comprar" value="${item.cant_a_comprar}" min="1" class="${inputClass} text-center font-bold"></td>
+                <td class="px-2 py-2 text-sm text-gray-900"><input type="number" data-type="structural" data-index="${index}" data-field="valor_unitario" value="${item.valor_unitario.toFixed(2)}" min="0" step="0.01" class="${inputClass} text-right font-semibold text-red-600"></td>
+                <td class="px-2 py-2 text-sm font-bold text-gray-800 text-right">${formatCurrency(valorTotal)}</td>
+                <td class="px-2 py-2 text-sm text-gray-900"><input type="number" data-type="structural" data-index="${index}" data-field="peso_kg_m" value="${item.peso_kg_m.toFixed(3)}" min="0" step="0.001" class="${inputClass} text-center"></td>
+                <td class="px-2 py-2 text-sm font-semibold text-gray-800 text-right">${formatWeight(pesoTotalKg)}</td>
                 <td class="px-2 py-2 text-sm font-medium text-center">
-                    <button type="button" onclick="removeItem(${index})" 
+                    <button type="button" onclick="removeItem('structural', ${index})" 
                             class="text-red-500 hover:text-red-700 transition duration-150 p-1 rounded-full hover:bg-red-50">
                             <i class="fas fa-trash-alt text-xs"></i>
                     </button>
                 </td>
             `;
         });
+        calculateTotals();
+    }
 
-        // Actualizar totales en el footer
-        grandTotalValueSpan.textContent = `$ ${grandTotalValue.toLocaleString('es-CL', { minimumFractionDigits: 2 })}`;
-        grandTotalWeightSpan.textContent = `${grandTotalWeight.toFixed(3)} kg`;
+    function renderOverheadItems() {
+        overheadItemsTableBody.innerHTML = '';
+        const inputClass = "w-full border-none focus:ring-1 focus:ring-[#7CA8D5] p-0 bg-transparent text-sm rounded-sm transition-all";
+
+        overheadItems.forEach((item, index) => {
+            const valorTotal = (item.cantidad * item.valor_unitario);
+
+            const row = overheadItemsTableBody.insertRow();
+            row.className = 'hover:bg-indigo-50/50 transition duration-100';
+
+            row.innerHTML = `
+                <td class="px-3 py-2 text-sm text-gray-900"><input type="text" data-type="overhead" data-index="${index}" data-field="descripcion" value="${item.descripcion}" class="${inputClass}"></td>
+                <td class="px-2 py-2 text-sm text-gray-900"><input type="text" data-type="overhead" data-index="${index}" data-field="unidad" value="${item.unidad}" class="${inputClass} text-center"></td>
+                <td class="px-2 py-2 text-sm text-gray-900"><input type="number" data-type="overhead" data-index="${index}" data-field="cantidad" value="${item.cantidad.toFixed(2)}" min="1" step="0.01" class="${inputClass} text-center font-bold"></td>
+                <td class="px-2 py-2 text-sm text-gray-900"><input type="number" data-type="overhead" data-index="${index}" data-field="valor_unitario" value="${item.valor_unitario.toFixed(2)}" min="0" step="0.01" class="${inputClass} text-right font-semibold text-red-600"></td>
+                <td class="px-2 py-2 text-sm font-bold text-gray-800 text-right">${formatCurrency(valorTotal)}</td>
+                <td class="px-2 py-2 text-sm font-medium text-center">
+                    <button type="button" onclick="removeItem('overhead', ${index})" 
+                            class="text-red-500 hover:text-red-700 transition duration-150 p-1 rounded-full hover:bg-red-50">
+                            <i class="fas fa-trash-alt text-xs"></i>
+                    </button>
+                </td>
+            `;
+        });
+        calculateTotals();
     }
     
-    // Función de actualización
-    function updateItem(input) {
+    // --- Función de Actualización de Datos de Entrada ---
+    function updateItem(input, type) {
         const index = parseInt(input.dataset.index);
         const field = input.dataset.field;
         let value = input.value;
+        const array = type === 'structural' ? structuralItems : overheadItems;
         
         // Conversión y validación de tipos
-        if (['largo_mm', 'cant_necesaria', 'cant_a_comprar'].includes(field)) {
-            value = parseInt(value) || 0;
-            if (field === 'cant_necesaria' && value < 1) value = 1;
-            if (field === 'cant_a_comprar' && value < 1) value = 1;
-
-        } else if (['largo_m', 'unidad_comercial', 'valor_unitario', 'peso_kg_m'].includes(field)) {
-            value = parseFloat(value) || 0.00;
+        if (input.type === 'number') {
+            value = parseFloat(value) || 0;
+            // Validaciones específicas para enteros (e.g., Cant. Necesaria)
+            if (field === 'cant_necesaria' || field === 'cant_a_comprar') {
+                 value = Math.max(1, Math.round(value)); // Asegura que sea al menos 1
+            }
         }
-
-        currentItems[index][field] = value;
-        renderItems();
+        
+        array[index][field] = value;
+        
+        // Re-renderizado y cálculo
+        if (type === 'structural') {
+            renderStructuralItems();
+        } else {
+            renderOverheadItems();
+        }
     }
     
-    // Asocia la función de actualización a todos los cambios en la tabla
-    itemsTableBody.addEventListener('change', (e) => {
+    // --- Escuchadores de Eventos de la Tabla (Delegación) ---
+    structuralItemsTableBody.addEventListener('change', (e) => {
         if (e.target.tagName === 'INPUT') {
-            updateItem(e.target);
+            updateItem(e.target, 'structural');
         }
     });
 
-    // Añade un material de ejemplo
-    function addItem() {
-        currentItems.push({ 
-            material_nombre: 'Perfil Estructural', 
+    overheadItemsTableBody.addEventListener('change', (e) => {
+        if (e.target.tagName === 'INPUT') {
+            updateItem(e.target, 'overhead');
+        }
+    });
+
+
+    // --- Funciones para Agregar y Eliminar Items ---
+
+    function addStructuralItem() {
+        structuralItems.push({ 
+            material_nombre: 'Perfil HSS 100x100x4', 
             largo_mm: 6000, 
             largo_m: 6.00, 
             unidad_comercial: 6.00, 
             cant_necesaria: 1, 
             cant_a_comprar: 1, 
-            valor_unitario: 10000.00, 
-            peso_kg_m: 1.00 
+            valor_unitario: 50000.00, 
+            peso_kg_m: 9.68 
         });
-        renderItems();
+        renderStructuralItems();
+    }
+
+    function addOverheadItem() {
+        overheadItems.push({ 
+            descripcion: 'Transporte a obra', 
+            unidad: 'Viaje',
+            cantidad: 1.00, 
+            valor_unitario: 35000.00
+        });
+        renderOverheadItems();
     }
     
-    function removeItem(index) {
-        currentItems.splice(index, 1);
-        renderItems();
+    function removeItem(type, index) {
+        if (type === 'structural') {
+            structuralItems.splice(index, 1);
+            renderStructuralItems();
+        } else {
+            overheadItems.splice(index, 1);
+            renderOverheadItems();
+        }
     }
 
-    // Listeners principales
-    addItemButton.addEventListener('click', addItem);
+    // Exportar función al scope global para que el `onclick` funcione
+    window.removeItem = removeItem;
 
-    // Antes de enviar, serializa el array a JSON
+    // --- Listeners principales ---
+    addStructuralItemButton.addEventListener('click', addStructuralItem);
+    addOverheadItemButton.addEventListener('click', addOverheadItem);
+
+    // --- Serialización antes del Envío (Submit) ---
     form.addEventListener('submit', function(e) {
-        if (currentItems.length === 0) {
+        if (structuralItems.length === 0 && overheadItems.length === 0) {
              e.preventDefault();
-             alert("Debe agregar al menos un material a la cotización.");
+             alert("Debe agregar al menos un material o costo a la cotización.");
              return;
         }
-        // Asegura que los últimos cambios se reflejen antes de serializar
-        itemsJsonInput.value = JSON.stringify(currentItems);
+        
+        // Serializar los arrays a JSON para enviarlos al backend de Django
+        structuralItemsJsonInput.value = JSON.stringify(structuralItems);
+        overheadItemsJsonInput.value = JSON.stringify(overheadItems);
+        
+        // El total ya se actualizó en calculateTotals()
     });
     
-    // Inicializar
-    addItem(); 
+    // --- Inicialización ---
+    // Añadir un item de ejemplo de cada tipo al cargar
+    addStructuralItem();
+    addOverheadItem(); 
 </script>
 
 {% endblock %}
