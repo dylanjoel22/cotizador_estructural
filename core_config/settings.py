@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_vite',
     'main_app',
+    'usuarios_app',
+    'cotizador_app',
 ]
 
 MIDDLEWARE = [
@@ -122,6 +124,10 @@ STATICFILES_DIRS = [
     BASE_DIR / 'assets/django-assets',
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+MEDIA_ROOT = BASE_DIR / 'media'
+# La URL base para acceder a esos archivos subidos
+MEDIA_URL = '/media/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
