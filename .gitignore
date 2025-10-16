@@ -1,6 +1,6 @@
 # Ignorar carpetas de dependencias
-/frontend/node_modules/
-/venv/
+frontend/node_modules/
+venv/
 
 # Ignorar archivos de Python
 __pycache__/
