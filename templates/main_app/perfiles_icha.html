@@ -1,5 +1,70 @@
 {% extends 'base.html' %}
 {% block page_title %}Base de datos del manual ICHA{% endblock %}
 {% block content %} 
-<h1>AQUI VA IR EL CONTENIDO DE PERFILES ICHA</h1>
+<div class="container mx-auto mt-10 p-6">
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">Visor de Perfiles Estructurales (API)</h1>
+
+    <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+        <div class="mb-5">
+            <label for="profile-select" class="block text-sm font-medium text-gray-700 mb-2">Selecciona un perfil:</label>
+            <select id="profile-select" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                <option>Cargando perfiles...</option>
+            </select>
+        </div>
+
+        <div>
+            <h2 class="text-xl font-semibold mb-3 text-gray-700">Datos del Perfil Seleccionado (JSON):</h2>
+            <pre id="profile-details" class="bg-gray-100 p-4 rounded-md border border-gray-200 text-sm overflow-auto">Selecciona un perfil para ver sus detalles.</pre>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const select = document.getElementById('profile-select');
+        const details = document.getElementById('profile-details');
+        let profilesData = []; // Almacenar todos los datos de los perfiles
+
+        // 1. Cargar los perfiles desde la API
+        // Usamos la URL que definimos en urls.py
+        fetch('/api/profiles/')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                profilesData = data; // Guardar los datos para uso posterior
+                select.innerHTML = '<option value="">-- Selecciona un perfil --</option>'; // Opción por defecto
+
+                // 2. Poblar el menú desplegable con los perfiles
+                profilesData.forEach(profile => {
+                    const option = document.createElement('option');
+                    option.value = profile.id; // Usamos el ID como valor
+                    option.textContent = profile.name; // Mostramos el nombre
+                    select.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error al cargar los perfiles:', error);
+                select.innerHTML = '<option>Error al cargar datos</option>';
+                details.textContent = `No se pudieron cargar los datos de la API. Revisa la consola del navegador (F12) para ver el error: ${error.message}`;
+            });
+
+        // 3. Añadir un 'escuchador' para cuando el usuario cambie la selección
+        select.addEventListener('change', function() {
+            const selectedId = this.value;
+            if (selectedId) {
+                // Encontrar el perfil seleccionado en los datos ya guardados
+                const selectedProfile = profilesData.find(p => p.id == selectedId);
+                
+                // Formatear el JSON para mostrarlo de forma legible (con 2 espacios de indentación)
+                details.textContent = JSON.stringify(selectedProfile, null, 2);
+            } else {
+                details.textContent = 'Selecciona un perfil para ver sus detalles.';
+            }
+        });
+    });
+</script>
 {% endblock %}

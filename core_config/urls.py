@@ -29,4 +29,7 @@ urlpatterns = [
 
     #Ruta de la aplicacion de cotizaciones
     path('cotizaciones/', include('cotizador_app.urls')),
+
+    #Ruta de la API de perfiles
+    path('api/', include('profiles_api.urls')),
 ]

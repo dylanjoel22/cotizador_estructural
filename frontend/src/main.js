@@ -3,4 +3,4 @@ import './main.css';
 
 document.body.classList.remove('fouc-hidden'); 
 
-consoloe.log("Hola desde Vite y Django!");
+console.log("Hola desde Vite y Django!");
