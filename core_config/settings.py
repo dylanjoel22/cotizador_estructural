@@ -28,6 +28,10 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
+LOGIN_URL = '/' # Redirige a la página de login si no está autenticado
+LOGIN_REDIRECT_URL = '/home/' # Redirige a esta página después de iniciar sesión
+LOGOUT_REDIRECT_URL = '/' # Redirige a esta página después de cerrar sesión
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -37,12 +41,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'widget_tweaks',
     'django_vite',
     'rest_framework',
     'main_app',
     'usuarios_app',
     'cotizador_app',
     'profiles_api',
+    'login_app',
 ]
 
 MIDDLEWARE = [

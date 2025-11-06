@@ -1,0 +1,78 @@
+{% load widget_tweaks %}
+{% load django_vite %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Cotizador</title>
+    
+    {# Carga los assets de Vite. Asegúrate de que 'src/main.js' sea tu entry point real #}
+    {% vite_hmr_client %} 
+    {% vite_asset 'src/main.js' %}
+</head>
+<body class="antialiased"> 
+    
+    {# Contenedor principal: Centra la tarjeta en la pantalla #}
+    <div class="min-h-screen flex items-center justify-center bg-gray-100">
+        
+        {# Tarjeta de Login #}
+        <div class="max-w-md w-full p-8 bg-white shadow-xl rounded-xl space-y-6 border border-gray-200">
+            
+            <h1 class="text-3xl font-extrabold text-gray-900 text-center">
+                Iniciar Sesión
+            </h1>
+            <p class="text-sm text-gray-500 text-center">
+                Cotizador Estructural
+            </p>
+
+            <form method="post" class="space-y-4">
+                
+                {% csrf_token %} 
+                
+                {# 1. Mapeo de Campos para Control de Estilos #}
+                {% for field in form %}
+                    <div>
+                        {# Etiqueta del Campo #}
+                        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            {{ field.label }}
+                        </label>
+                        
+                        {# Campo de Entrada #}
+                        <div class="mt-1">
+                            {{ field|add_class:"w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm" }}
+                        </div>
+                        
+                        {# Mostrar errores si existen #}
+                        {% for error in field.errors %}
+                            <p class="mt-2 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+
+                {# Mensajes de error del formulario (ej. credenciales inválidas) #}
+                {% if form.non_field_errors %}
+                    <div class="p-3 bg-red-50 border border-red-300 rounded-md">
+                        {% for error in form.non_field_errors %}
+                            <p class="text-sm text-red-700 font-medium">hola, Credenciales invalidas</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {# Botón de Envío #}
+                <button 
+                    type="submit"
+                    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500"
+                >
+                    Entrar
+                </button>
+            </form>
+            
+            <p class="text-center text-sm text-gray-500">
+                ¿Olvidaste tu contraseña? <a href="#" class="font-medium text-sky-600 hover:text-sky-500">Recuperar</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
