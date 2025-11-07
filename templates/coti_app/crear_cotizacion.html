@@ -117,6 +117,31 @@
         Crear Nueva Cotización
     </h1>
 
+    {% if error_message %}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <strong class="font-bold">Error:</strong>
+            <span class="block sm:inline">{{ error_message }}</span>
+        </div>
+    {% endif %}
+
+    {% if form.errors %}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <strong class="font-bold">Por favor, corrija los siguientes errores:</strong>
+            <ul class="list-disc ml-5">
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <li><span class="font-semibold">{{ field.label }}:</span> {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+                {% if form.non_field_errors %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                {% endif %}
+            </ul>
+        </div>
+    {% endif %}
+
     <form method="POST" id="cotizacionForm">
         {% csrf_token %}
         
@@ -127,9 +152,11 @@
                 <div>
                     <label for="cliente_id" class="block text-sm font-bold text-gray-700 mb-1">Cliente (Opcional)</label>
                     <div class="flex space-x-2">
-                        <select name="cliente_id" id="cliente_id" class="flex-grow border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3">
+                        <select name="cliente" id="cliente_id" class="flex-grow border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3">
                             <option value="">Seleccione un cliente...</option>
-                            <!-- Clientes se cargarán dinámicamente -->
+                            {% for cliente in clientes_disponibles %}
+                                <option value="{{ cliente.id }}">{{ cliente.nombre }}</option>
+                            {% endfor %}
                         </select>
                         <button type="button" id="openClientModalButton" class="flex-shrink-0 px-4 py-2 font-medium rounded-lg shadow-md text-white bg-amber-500 hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-400 transition-all duration-150" title="Añadir nuevo cliente">
                             <i class="fas fa-user-plus"></i>
@@ -603,10 +630,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- ITEM ADD/REMOVE LOGIC ---
     function addStructuralItem() {
+        const largoM = parseFloat(modalLargoM.value) || 0;
         const newItem = {
             profile_id: modalProfileId.value,
             material_nombre: modalProfileNombre.value,
-            largo_m: parseFloat(modalLargoM.value) || 0,
+            largo_m: largoM,
+            largo_mm: largoM * 1000,
+            unidad_comercial: 6,
+            cant_necesaria: 1,
             cant_a_comprar: parseInt(modalCantComprar.value) || 1,
             valor_unitario: parseFloat(modalValorUnitario.value) || 0,
             peso_kg_m: parseFloat(modalProfilePesoKgM.value) || 0,
