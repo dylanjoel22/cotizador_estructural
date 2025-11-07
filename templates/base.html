@@ -37,7 +37,7 @@
         <span class="ml-3">Inicio</span>
       </a>
 
-      <a href="{% url 'cotizaciones' %}" class="flex items-center px-4 py-3 rounded-lg font-medium transition-all hover:bg-[#7CA8D5] hover:text-[#002B5B] {% if request.resolver_match.url_name == 'cotizaciones' %}bg-[#7CA8D5] text-[#002B5B]{% endif %}">
+      <a href="{% url 'cotizador_app:cotizaciones' %}" class="flex items-center px-4 py-3 rounded-lg font-medium transition-all hover:bg-[#7CA8D5] hover:text-[#002B5B] {% if request.resolver_match.url_name == 'cotizaciones' %}bg-[#7CA8D5] text-[#002B5B]{% endif %}">
         <i class="fas fa-file-invoice-dollar w-5"></i>
         <span class="ml-3">Cotizaciones</span>
       </a>

@@ -3,7 +3,7 @@
 {% block content %}
 
 <div class="flex space-x-2">
-    <a class="rounded-full p-2 font-medium text-white transition-colors duration-500 ease-in-out bg-blue-900 hover:bg-green-600 " href="{% url 'crear_cotizacion' %}">
+    <a class="rounded-full p-2 font-medium text-white transition-colors duration-500 ease-in-out bg-blue-900 hover:bg-green-600 " href="{% url 'cotizador_app:crear_cotizacion' %}">
         <i class="fas fa-plus"></i>
         <span class="ml-3">Crear Nueva Cotización</span>
     </a>
@@ -25,55 +25,26 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-100">
-                   
-                    
                     {% for cotizacion in cotizaciones %}
-                        {% empty %}
                         <tr class="hover:bg-blue-50/50 transition duration-100">
-                            <td class="px-3 py-3 text-sm font-bold text-[#002B5B]">1</td>
-                            <td class="px-3 py-3 text-sm text-gray-900">Proyecto Galpón Sur - Estructuras</td>
-                            <td class="px-3 py-3 text-sm text-center text-gray-600">07-Oct-2025</td>
-                            <td class="px-3 py-3 text-sm font-semibold text-red-600 text-right">$ 150.890.00</td>
-                            <td class="px-3 py-3 text-sm text-gray-700">J. Pérez</td>
+                            <td class="px-3 py-3 text-sm font-bold text-[#002B5B]">{{ cotizacion.id }}</td>
+                            <td class="px-3 py-3 text-sm text-gray-900">{{ cotizacion.proyecto_nombre }}</td>
+                            <td class="px-3 py-3 text-sm text-center text-gray-600">{{ cotizacion.fecha_creacion|date:"d-M-Y" }}</td>
+                            <td class="px-3 py-3 text-sm font-semibold text-red-600 text-right">$ {{ cotizacion.total_costo|floatformat:2 }}</td>
+                            <td class="px-3 py-3 text-sm text-gray-700">{{ cotizacion.cliente.nombre|default:"N/A" }}</td>
                             <td class="px-3 py-3 text-center text-sm font-medium">
-                                <a href="{% url 'detalle_cotizacion' %}" 
+                                <a href="{% url 'cotizador_app:detalle_cotizacion' %}" 
                                    class="text-[#7CA8D5] hover:text-[#002B5B] transition duration-150 p-1 rounded-full">
                                     <i class="fas fa-eye text-sm"></i>
                                 </a>
                             </td>
                         </tr>
-
-                        <tr class="hover:bg-blue-50/50 transition duration-100">
-                            <td class="px-3 py-3 text-sm font-bold text-[#002B5B]">2</td>
-                            <td class="px-3 py-3 text-sm text-gray-900">Cliente Maderas S.A. - Rack de Carga</td>
-                            <td class="px-3 py-3 text-sm text-center text-gray-600">05-Oct-2025</td>
-                            <td class="px-3 py-3 text-sm font-semibold text-red-600 text-right">$ 85.120.00</td>
-                            <td class="px-3 py-3 text-sm text-gray-700">M. Bravo</td>
-                            <td class="px-3 py-3 text-center text-sm font-medium">
-                                <a href="#" 
-                                   class="text-[#7CA8D5] hover:text-[#002B5B] transition duration-150 p-1 rounded-full">
-                                    <i class="fas fa-eye text-sm"></i>
-                                </a>
-                            </td>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4">No hay cotizaciones registradas.</td>
                         </tr>
-
-                        <tr class="hover:bg-blue-50/50 transition duration-100">
-                            <td class="px-3 py-3 text-sm font-bold text-[#002B5B]">3</td>
-                            <td class="px-3 py-3 text-sm text-gray-900">Taller Interno - Reparación de Máquina 3</td>
-                            <td class="px-3 py-3 text-sm text-center text-gray-600">01-Oct-2025</td>
-                            <td class="px-3 py-3 text-sm font-semibold text-red-600 text-right">$ 25.500.00</td>
-                            <td class="px-3 py-3 text-sm text-gray-700">J. Pérez</td>
-                            <td class="px-3 py-3 text-center text-sm font-medium">
-                                <a href="#" 
-                                   class="text-[#7CA8D5] hover:text-[#002B5B] transition duration-150 p-1 rounded-full">
-                                    <i class="fas fa-eye text-sm"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        
                     {% endfor %}
-
                 </tbody>
             </table>
-
+</div>
 {% endblock %}
