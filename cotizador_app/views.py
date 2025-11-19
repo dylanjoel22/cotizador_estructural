@@ -254,3 +254,16 @@ def generar_pdf(request, cotizacion_id):
 
     doc.build(Story)
     return response
+
+def eliminar_cotizacion(request, cotizacion_id):
+    cotizacion = get_object_or_404(Cotizacion, id=cotizacion_id)
+
+    # Si el usuario ya confirmó (POST), se borra
+    if request.method == "POST":
+        cotizacion.delete()
+        return redirect(reverse('cotizador_app:cotizaciones'))
+
+    # Si entra por GET, mostrar confirmación automática
+    return render(request, 'coti_app/eliminar_cotizacion.html', {
+        'cotizacion': cotizacion
+    })
