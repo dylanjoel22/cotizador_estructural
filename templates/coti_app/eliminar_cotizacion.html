@@ -1,0 +1,27 @@
+<!--En realidad este html solo existe para asegurar si es que quiere eliminar la cotizacion o no, por si es que se ingresa al link directamente-->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Eliminar Cotización</title>
+</head>
+<body>
+
+<script>
+    const seguro = confirm("¿Seguro que deseas eliminar la cotización: {{ cotizacion.proyecto_nombre }} ?");
+
+    if (seguro) {
+        // Crear un formulario POST y enviarlo automáticamente
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = "";  // misma URL
+        form.innerHTML = `{% csrf_token %}`;
+        document.body.appendChild(form);
+        form.submit();
+    } else {
+        // Volver atrás sin hacer nada
+        window.history.back();
+    }
+</script>
+
+</body>
+</html>

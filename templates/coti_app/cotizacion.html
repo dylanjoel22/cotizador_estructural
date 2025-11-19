@@ -37,6 +37,13 @@
                                    class="text-[#7CA8D5] hover:text-[#002B5B] transition duration-150 p-1 rounded-full">
                                     <i class="fas fa-eye text-sm"></i>
                                 </a>
+                                <a href="{% url 'cotizador_app:generar_pdf' cotizacion.id %}" 
+                                   class="text-[#7CA8D5] hover:text-[#002B5B] transition duration-150 p-1 rounded-full">
+                                    <i class="fa-solid fa-download"></i>
+                                <a href="{% url 'cotizador_app:eliminar_cotizacion' cotizacion.id %}"
+                                   class="text-[#7CA8D5] hover:text-[#002B5B] transition duration-150 p-1 rounded-full">
+                                    <i class="fa-solid fa-trash"></i>
+                                </a>
                             </td>
                         </tr>
                     {% empty %}
