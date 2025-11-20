@@ -51,6 +51,7 @@ class Cliente(models.Model):
 
 class PersonaContacto(models.Model):
     nombre = models.CharField(max_length=100, verbose_name="Nombre Completo")
+    rut = models.CharField(max_length=15, unique=True, verbose_name="RUT", help_text="Formato: XX.XXX.XXX-X", blank=True, null=True,validators=[validar_rut_chileno])
     email = models.EmailField(max_length=100, verbose_name="Correo Electrónico")
     telefono = models.CharField(max_length=20, verbose_name="Número de Teléfono", validators=[validar_telefono])
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='contactos', verbose_name="Empresa Asociada")

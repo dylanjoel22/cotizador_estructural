@@ -1,6 +1,7 @@
 from django.shortcuts import render,redirect,reverse
-from .forms import ClienteForm
-from .models import Cliente
+from .forms import ClienteForm, PersonaContactoForm
+from .models import Cliente, PersonaContacto
+from django.shortcuts import get_object_or_404
 
 # Create your views here.
 
@@ -41,3 +42,50 @@ def clientes(request):
     }
     return render(request, 'usuarios_app/clientes.html', context)
 
+
+def detalle_cliente(request, pk):
+    cliente = get_object_or_404(Cliente, pk=pk)
+    contactos = PersonaContacto.objects.filter(cliente=cliente)
+    context = {
+        'cliente': cliente,
+        'contactos': contactos,
+        'page_title': f'Detalle del Cliente: {cliente.nombre}'
+    }
+    return render(request, 'usuarios_app/clientes_contactos.html', context)
+    
+
+def añadir_persona_contacto(request, pk):
+    # 1. Obtener el Cliente.
+    cliente = get_object_or_404(Cliente, pk=pk)
+
+    # 2. Creamos una instancia del modelo con la FK YA ASIGNADA
+    contacto_con_cliente_asignado = PersonaContacto(cliente=cliente)
+
+    if request.method == 'POST':
+        # 3. Pasar el POST data Y la instancia pre-asignada al formulario
+        form = PersonaContactoForm(
+            request.POST, 
+            instance=contacto_con_cliente_asignado
+        ) 
+        
+        if form.is_valid():
+            # 💥 4. ¡AQUÍ ESTABA EL CÓDIGO FALTANTE! 💥
+            # El objeto se guarda
+            form.save()
+            
+            # AÑADIMOS LA REDIRECCIÓN DE ÉXITO:
+            # Usamos el nombre de URL globalmente único según tu petición.
+            return redirect('detalle_cliente', pk=cliente.pk) # ⬅️ FIX AÑADIDO
+        
+    else:
+        # Petición GET: Pasamos la instancia al formulario
+        form = PersonaContactoForm(instance=contacto_con_cliente_asignado)
+    
+    context = {
+        'form': form,
+        'cliente': cliente,
+        'page_title': 'Añadir Persona de Contacto'
+    }
+    
+    # Si form.is_valid() falla, el código llega aquí y renderiza el formulario con errores.
+    return render(request, 'usuarios_app/contactos_crear.html', context)

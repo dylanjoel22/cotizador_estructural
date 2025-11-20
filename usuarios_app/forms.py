@@ -1,7 +1,7 @@
 # clientes/forms.py
 
 from django import forms
-from .models import Cliente # Asegúrate de que este modelo ya no tenga los campos eliminados
+from .models import Cliente, PersonaContacto # Asegúrate de que este modelo ya no tenga los campos eliminados
 
 class ClienteForm(forms.ModelForm):
     class Meta:
@@ -32,4 +32,18 @@ class ClienteForm(forms.ModelForm):
                 'class': 'w-full p-2 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100'
             }),
             
+        }
+
+class PersonaContactoForm(forms.ModelForm):
+    class Meta:
+        model = PersonaContacto
+        exclude = ['cliente']
+        fields = ['nombre', 'rut', 'email', 'telefono', 'cliente']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded-lg focus:ring-[#7CA8D5] focus:border-[#7CA8D5]'}),
+            'rut': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded-lg focus:ring-[#7CA8D5] focus:border-[#7CA8D5]',
+                                          'placeholder': 'Ejemplo: 12.345.678-K'}),
+            'email': forms.EmailInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded-lg focus:ring-[#7CA8D5] focus:border-[#7CA8D5]'}),
+            'telefono': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded-lg focus:ring-[#7CA8D5] focus:border-[#7CA8D5]'}),
+            'cliente': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded-lg focus:ring-[#7CA8D5] focus:border-[#7CA8D5]'}),
         }
