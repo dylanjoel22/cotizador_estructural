@@ -24,7 +24,8 @@
             <tr>
                 <th class="px-3 py-3 text-xs font-semibold uppercase tracking-wider w-16 text-center">ID</th>
                 <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider min-w-[250px]">Nombre</th>
-                <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider w-32">Código Cliente</th>
+                <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider w-32">Rut</th>
+                <th class="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider w-32">Código Cliente</th>
                 <th class="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider w-32">Ciudad</th>
                 <th class="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider w-32">Telefono</th>
                 <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider w-32">Fecha de registro
@@ -49,8 +50,8 @@
                 </td>
 
                 {# 2. El resto de las celdas de datos (no necesitan cambios) #}
-                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700 text-center">{{ cliente.codigo_cliente }}
-                </td>
+                <td>{{ cliente.rut }}</td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700 text-center">{{ cliente.codigo_cliente }}</td>
                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700 text-center">{{ cliente.ciudad }}</td>
                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700 text-right">{{ cliente.telefono }}</td>
                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700">{{ cliente.fecha_registro|date:"d/m/Y" }}

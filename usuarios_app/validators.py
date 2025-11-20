@@ -3,41 +3,55 @@ import re
 from itertools import cycle
 from django.core.exceptions import ValidationError
 
+import re
+from itertools import cycle
+# Nota: La clase ValidationError debe ser importada desde tu framework (ej. Django)
+# from django.core.exceptions import ValidationError 
+
 def validar_rut_chileno(rut):
     """
-    Valida que el RUT tenga el formato correcto y que el dígito verificador sea válido.
-    Acepta formatos: 12.345.678-9 o 12345678-9 (con o sin puntos).
+    Valida que el RUT tenga el formato chileno estricto (XX.XXX.XXX-X) 
+    y que el dígito verificador sea válido.
     """
     if not rut:
         return # Si es nulo, dejamos que la BD maneje el blank=True
 
-    # 1. Limpieza: Eliminamos puntos y guiones, y pasamos a mayúsculas
+    # NUEVO PASO: 1. Validación Estricta del Formato
+    # Requiere: [1-2 digitos] . [3 digitos] . [3 digitos] - [digito o K/k]
+    patron_estricto = r'^\d{1,2}\.\d{3}\.\d{3}-[\dkK]$'
+
+    if not re.match(patron_estricto, rut):
+        raise ValidationError("El formato del RUT es inválido. Debe usar el formato estricto: XX.XXX.XXX-X")
+
+    # 2. Limpieza: Eliminamos puntos y guiones, y pasamos a mayúsculas
+    # El RUT ingresado ya fue verificado como correcto en su estructura.
     rut_limpio = rut.replace(".", "").replace("-", "").upper()
 
-    # 2. Formato básico: Debe tener largo mínimo y ser alfanumérico
-    if len(rut_limpio) < 2 or not re.match(r'^[0-9]+[0-9K]$', rut_limpio):
-        raise ValidationError("El formato del RUT no es válido. Use: XX.XXX.XXX-X")
+    # 3. Formato básico: Largo del RUT limpio debe ser entre 2 y 9
+    # Un RUT válido limpio tiene entre 2 (1-9) y 9 (29999999-K) caracteres.
+    if len(rut_limpio) < 2 or len(rut_limpio) > 9:
+        raise ValidationError("El RUT no cumple con el largo mínimo/máximo después de la limpieza.")
 
-    # 3. Separar cuerpo y dígito verificador
+    # 4. Separar cuerpo y dígito verificador
     cuerpo = rut_limpio[:-1]
     dv_ingresado = rut_limpio[-1]
 
-    # 4. Algoritmo Módulo 11 (Lógica matemática)
+    # 5. Algoritmo Módulo 11 (Lógica matemática)
     reversed_digits = map(int, reversed(cuerpo))
     factors = cycle(range(2, 8))
     s = sum(d * f for d, f in zip(reversed_digits, factors))
-    res = (-s) % 11
+    
+    # El uso de (-s) % 11 asegura un resultado positivo entre 0 y 10.
+    res = (-s) % 11 
 
     if res == 10:
         dv_calculado = "K"
-    elif res == 11: # Matemáticamente el mod 11 no da 11, pero en la lógica RUT, si el resto es 0, el DV es 0.
-        dv_calculado = "0" 
-    else:
+    else: # 0, 1, 2, ..., 9
         dv_calculado = str(res)
 
-    # 5. Comparación final
+    # 6. Comparación final
     if dv_ingresado != dv_calculado:
-        raise ValidationError(f"El RUT es inválido (Dígito verificador incorrecto).")
+        raise ValidationError(f"El RUT es inválido (Dígito verificador incorrecto. El DV correcto es {dv_calculado}).")
 
 def validar_telefono(telefono):
     """
