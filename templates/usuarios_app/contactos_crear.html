@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block page_title %}Agregar Persona de Contacto{% endblock %}
+
+{% block content %}
+
+<div class="max-w-2xl mx-auto p-8 bg-white rounded-2xl shadow-2xl border border-gray-100">
+
+    <h1 class="text-3xl font-extrabold text-[#002B5B] mb-6 border-b-4 border-[#7CA8D5] pb-3 flex items-center">
+        <i class="fas fa-user-plus mr-3 text-[#7CA8D5]"></i>Nuevo Contacto para {{ cliente.nombre }}
+    </h1>
+
+    <p class="mb-6 text-gray-600">
+        Complete el siguiente formulario para agregar una nueva persona de contacto asociada a un cliente.
+    </p>
+
+    <form method="POST" >
+        {% csrf_token %}
+
+        {# 💥 BLOQUE DE DEBUGGING OBLIGATORIO 💥 #}
+    {% if form.errors %}
+        <div class="p-4 mb-4 bg-red-100 border border-red-400 rounded-lg text-red-800">
+            <h3 class="font-bold">¡Error de Validación!</h3>
+            <p class="text-sm">El formulario no se guardó debido a:</p>
+            
+            {# Muestra errores no asociados a un campo (si los hay) #}
+            {% if form.non_field_errors %}
+                <ul class="list-disc list-inside mt-2">
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            {# Muestra TODOS los errores de campos, incluso los que ya se muestran en el loop #}
+            {# Esto te ayudará a ver qué campo es el que falla. #}
+            <details class="mt-2 text-xs">
+                <summary>Ver lista completa de errores por campo</summary>
+                {% for field in form %}
+                    {% if field.errors %}
+                        <p class="mt-1"><strong>{{ field.label }}:</strong> {{ field.errors }}</p>
+                    {% endif %}
+                {% endfor %}
+            </details>
+        </div>
+    {% endif %}
+    {# 💥 FIN BLOQUE DE DEBUGGING 💥 #}
+
+        <div class="space-y-6">
+
+            <!-- Nombre -->
+            <div>
+                <label for="{{ form.nombre.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-1">
+                    {{ form.nombre.label }} <span class="text-red-500">*</span>
+                </label>
+                {{ form.nombre }}
+                {% if form.nombre.errors %}
+                <p class="text-red-500 text-xs mt-1">{{ form.nombre.errors }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Rut -->
+            <div>
+                <label for="{{ form.rut.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-1">
+                    {{ form.rut.label }} <span class="text-red-500">*</span>
+                </label>
+                {{ form.rut }}
+                {% if form.rut.errors %}
+                <p class="text-red-500 text-xs mt-1">{{ form.rut.errors }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Email -->
+            <div>
+                <label for="{{ form.email.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-1">
+                    {{ form.email.label }} <span class="text-red-500">*</span>
+                </label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                <p class="text-red-500 text-xs mt-1">{{ form.email.errors }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Teléfono -->
+            <div>
+                <label for="{{ form.telefono.id_for_label }}" class="block text-sm font-bold text-gray-700 mb-1">
+                    {{ form.telefono.label }} <span class="text-red-500">*</span>
+                </label>
+                {{ form.telefono }}
+                {% if form.telefono.errors %}
+                <p class="text-red-500 text-xs mt-1">{{ form.telefono.errors }}</p>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <!-- BOTÓN GUARDAR -->
+        <div class="mt-6">
+            <button type="submit"
+                class="w-full bg-[#002B5B] text-white font-bold py-2 px-4 rounded hover:bg-[#7CA8D5] transition duration-300">
+                Guardar Contacto
+            </button>
+        </div>
+    </form>
+</div>
+
+
+
+{% endblock %}

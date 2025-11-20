@@ -6,20 +6,12 @@
 
 <!-- Buscador -->
 <form method="GET" class="mb-6">
-    <input 
-        type="text" 
-        name="q"
-        value="{{ request.GET.q }}"
-        placeholder="Buscar empresa..."
-        class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm 
-                focus:outline-none focus:ring-2 focus:ring-blue-500"
-        disabled
-    >
+    <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Buscar empresa..." class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm 
+                focus:outline-none focus:ring-2 focus:ring-blue-500" disabled>
 </form>
 
 <!-- Botón para añadir cliente -->
-<a href="{% url 'añadir_cliente' %}"
-    class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg shadow">
+<a href="{% url 'añadir_cliente' %}" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg shadow">
     + Añadir Cliente
 </a>
 
@@ -28,45 +20,65 @@
 
     {% if clientes %}
     <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-blue-900 text-white">
-                    <tr>
-                        <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider w-16">ID</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider min-w-[250px]">Nombre</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider w-32">Código Cliente</th>
-                        <th class="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider w-32">Ciudad</th>
-                        <th class="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider w-32">Telefono</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider w-32">Fecha de registro</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider w-20">Activo</th>
-                        <th class="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider w-20">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-100">
-                    {% for cliente in clientes %}
-                        <tr class="hover:bg-blue-50/50 transition duration-100">
-                            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700">{{ cliente.id }}</td>
-                            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700">{{ cliente.nombre }}</td>
-                            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700 text-center">{{ cliente.codigo_cliente }}</td>
-                            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700 text-center">{{ cliente.ciudad }}</td>
-                            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700 text-right">{{ cliente.telefono }}</td>
-                            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700">{{ cliente.fecha_registro|date:"d/m/Y" }}</td>
-                            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700 ">
-                                {% if cliente.activo %}
-                                    <span class="inline-block px-2 py-1 text-xs font-semibold text-green-800 bg-green-200 rounded-full text-center">Sí</span>
-                                {% else %}
-                                    <span class="inline-block px-2 py-1 text-xs font-semibold text-red-800 bg-red-200 rounded-full text-center">No</span>
-                                {% endif %}
-                            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700 text-center">
-                                <a href="#" class="text-blue-600 hover:text-blue-800 mr-2">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="#" class="text-red-600 hover:text-red-800">
-                                    <i class="fas fa-trash-alt"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <thead class="bg-blue-900 text-white">
+            <tr>
+                <th class="px-3 py-3 text-xs font-semibold uppercase tracking-wider w-16 text-center">ID</th>
+                <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider min-w-[250px]">Nombre</th>
+                <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider w-32">Código Cliente</th>
+                <th class="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider w-32">Ciudad</th>
+                <th class="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider w-32">Telefono</th>
+                <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider w-32">Fecha de registro
+                <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider w-20">Activo</th>
+                <th class="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider w-20">Acciones</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-100">
+            {% for cliente in clientes %}
+            <tr class="hover:bg-blue-50/50 transition duration-100 relative group">
+                <td class="px-3 py-2 whitespace-nowrap text-sm font-semibold text-center">{{cliente.id}}</td >
+                <td class="px-3 py-2 whitespace-nowrap text-sm font-semibold">
+
+                    {# Enlace principal que se estirará sobre TODA la fila #}
+                    {# Usaremos una ruta PLACEHOLDER para el detalle #}
+                    <a href="{% url 'detalle_cliente' cliente.id %}"
+                        class="text-blue-600 hover:text-blue-800 transition duration-150 block w-full text-left">
+                        {{ cliente.nombre }}
+                        {# La clase 'absolute inset-0 z-10' es la magia del stretched link #}
+                        <span class="absolute inset-0 z-10" aria-hidden="true"></span>
+                    </a>
+                </td>
+
+                {# 2. El resto de las celdas de datos (no necesitan cambios) #}
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700 text-center">{{ cliente.codigo_cliente }}
+                </td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700 text-center">{{ cliente.ciudad }}</td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700 text-right">{{ cliente.telefono }}</td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700">{{ cliente.fecha_registro|date:"d/m/Y" }}
+                </td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700 ">
+                    {% if cliente.activo %}
+                    <span
+                        class="inline-block px-2 py-1 text-xs font-semibold text-green-800 bg-green-200 rounded-full text-center">Sí</span>
+                    {% else %}
+                    <span
+                        class="inline-block px-2 py-1 text-xs font-semibold text-red-800 bg-red-200 rounded-full text-center">No</span>
+                    {% endif %}
+                </td>
+
+                {# 3. Celda de Acciones (Debe tener un Z-INDEX más alto) #}
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700 text-center">
+                    {# Los botones de acción deben tener un z-index superior para ser clickeables #}
+                    <a href="#" class="text-blue-600 hover:text-blue-800 mr-2 relative z-20">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="#" class="text-red-600 hover:text-red-800 relative z-20">
+                        <i class="fas fa-trash-alt"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
     {% else %}
     <div class="p-6 text-center text-gray-500">
