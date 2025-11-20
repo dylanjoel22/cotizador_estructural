@@ -25,13 +25,22 @@
   <!-- Sidebar -->
   <aside class="fixed left-0 top-0 h-full w-64 bg-blue-900 text-white shadow-xl z-40 flex flex-col">
     
+
+
     <!-- Logo -->
     <div class="flex items-center justify-center h-20 border-b border-blue-900 bg-blue-900">
       <img src="{% static 'img/logo.png' %}" alt="Logo INMECSUTEC" class="h-16 object-contain rounded-lg bg-white p-1" onerror="this.style.display='none'">
     </div>
 
+    <div>
+      <div class="px-4 py-3 border-b border-blue-800">
+        <h2 class="text-lg font-semibold">Cotizador Estructural</h2>
+        <p class="text-sm text-blue-300">Bienvenido, {{ user.first_name|default:"Usuario" }}</p>
+      </div>
+    </div>
+
     <!-- Navegación -->
-    <nav class="flex-1 mt-6 px-4 space-y-1 text-sm">
+    <nav class="flex-1 mt-6 px-4 space-y-1 text-sm ">
       <a href="{% url 'inicio' %}" class="flex items-center px-4 py-3 rounded-lg font-medium transition-all hover:bg-[#7CA8D5] hover:text-[#002B5B] {% if request.resolver_match.url_name == 'inicio' %}bg-[#7CA8D5] text-[#002B5B]{% endif %}">
         <i class="fas fa-home w-5"></i>
         <span class="ml-3">Inicio</span>
@@ -52,20 +61,11 @@
         <span class="ml-3">Materiales ICHA</span>
       </a>
 
-      <a href="#" class="flex items-center px-4 py-3 rounded-lg font-medium transition-all hover:bg-[#7CA8D5] hover:text-[#002B5B]">
+      <a href="#" aria-disabled="true" class="flex items-center px-4 py-3 rounded-lg font-medium transition-all hover:bg-[#7CA8D5] hover:text-[#002B5B]">
         <i class="fas fa-chart-line w-5"></i>
         <span class="ml-3">Reportes</span>
       </a>
-    </nav>
-
-    <!-- Estado -->
-    <div class="p-4 mt-auto border-t border-blue-900 bg-blue-900 text-sm flex items-center justify-between">
-      <div class="flex items-center space-x-2 text-blue-100">
-        <i class="fas fa-circle text-green-400 text-xs"></i>
-        <span>Sistema activo</span>
-      </div>
-      <i class="fas fa-power-off text-blue-400 opacity-50"></i>
-    </div>
+    </nav> 
   </aside>
 
   <!-- Contenedor principal -->

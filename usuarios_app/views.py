@@ -1,5 +1,6 @@
 from django.shortcuts import render,redirect,reverse
 from .forms import ClienteForm
+from .models import Cliente
 
 # Create your views here.
 
@@ -18,9 +19,7 @@ def añadir_cliente(request):
         
         if form.is_valid():
             # Guarda la instancia del cliente y el archivo del logo
-            cliente = form.save() 
-            # Redirige a la URL de cotizaciones. Ajuste esta URL si es necesario.
-            return redirect(reverse('cotizaciones:nueva_cotizacion')) 
+            cliente = form.save()
             
     else: 
         # Para solicitudes GET, inicializa un formulario vacío
@@ -36,5 +35,9 @@ def añadir_cliente(request):
    
 
 def clientes(request):
-    return render(request, 'usuarios_app/clientes.html')
+    clientes = Cliente.objects.all()
+    context = {
+        'clientes': clientes
+    }
+    return render(request, 'usuarios_app/clientes.html', context)
 
