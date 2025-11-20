@@ -21,6 +21,7 @@ def añadir_cliente(request):
         if form.is_valid():
             # Guarda la instancia del cliente y el archivo del logo
             cliente = form.save()
+            return redirect(reverse('clientes'))
             
     else: 
         # Para solicitudes GET, inicializa un formulario vacío
