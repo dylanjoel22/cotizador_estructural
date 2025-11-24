@@ -4,11 +4,109 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <title>{% block title %}INMECSUTEC{% endblock %}</title>
 
   <style>
     .fouc-hidden {
       visibility: hidden;
+    }
+    
+    /* Animaciones personalizadas */
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .animate-slide-in {
+      animation: slideIn 0.3s ease-out forwards;
+    }
+    
+    .nav-item {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .nav-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 3px;
+      background: linear-gradient(180deg, #60A5FA, #3B82F6);
+      transform: translateX(-3px);
+      transition: transform 0.3s ease;
+    }
+    
+    .nav-item:hover::before,
+    .nav-item.active::before {
+      transform: translateX(0);
+    }
+    
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    
+    .badge-pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* Smooth scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Sidebar toggle animations */
+    .sidebar-hidden {
+      transform: translateX(-100%);
+    }
+    
+    .content-expanded {
+      margin-left: 0 !important;
+    }
+    
+    aside {
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .main-container {
+      transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
   </style>
 
@@ -20,104 +118,174 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 
-<body class="fouc-hidden bg-gray-50 font-sans text-gray-800">
+<body class="fouc-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 font-sans text-gray-800 antialiased">
 
   <!-- Sidebar -->
-  <aside class="fixed left-0 top-0 h-full w-64 bg-blue-900 text-white shadow-xl z-40 flex flex-col">
+  <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 bg-gradient-to-b from-[#002B5B] via-[#003d7a] to-[#002B5B] text-white shadow-2xl z-40 flex flex-col border-r border-[#003d7a]/50">
     
-
-
-    <!-- Logo -->
-    <div class="flex items-center justify-center h-20 border-b border-blue-900 bg-blue-900">
-      <img src="{% static 'img/logo.png' %}" alt="Logo INMECSUTEC" class="h-16 object-contain rounded-lg bg-white p-1" onerror="this.style.display='none'">
+    <!-- Logo Section -->
+    <div class="relative h-24 flex items-center justify-center border-b border-slate-700/50 bg-gradient-to-br from-slate-800/80 to-slate-900/80">
+      <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent"></div>
+      <img src="{% static 'img/logo.png' %}" alt="Logo INMECSUTEC" class="h-16 object-contain rounded-xl bg-white/95 p-2 shadow-lg relative z-10 hover:scale-105 transition-transform duration-300" onerror="this.style.display='none'">
     </div>
 
-    <div>
-      <div class="px-4 py-3 border-b border-blue-800">
-        <h2 class="text-lg font-semibold">Cotizador Estructural</h2>
-        <p class="text-sm text-blue-300">Bienvenido, {{ user.first_name|default:"Usuario" }}</p>
+    <!-- User Info -->
+    <!-- <div class="px-6 py-5 border-b border-slate-700/50 bg-slate-800/40">
+      <div class="flex items-center space-x-3">
+        <div class="relative">
+          <div class="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
+            {{ user.first_name.0|default:'U' }}{{ user.last_name.0|default:'A' }}
+          </div>
+          <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-slate-800"></div>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold text-white truncate">{{ user.first_name|default:"Usuario" }} {{ user.last_name|default:"" }}</p>
+          <p class="text-xs text-slate-400">Cotizador Estructural</p>
+        </div>
       </div>
-    </div>
+    </div> -->
 
-    <!-- Navegación -->
-    <nav class="flex-1 mt-6 px-4 space-y-1 text-sm ">
-      <a href="{% url 'inicio' %}" class="flex items-center px-4 py-3 rounded-lg font-medium transition-all hover:bg-[#7CA8D5] hover:text-[#002B5B] {% if request.resolver_match.url_name == 'inicio' %}bg-[#7CA8D5] text-[#002B5B]{% endif %}">
-        <i class="fas fa-home w-5"></i>
-        <span class="ml-3">Inicio</span>
+    <!-- Navigation -->
+    <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+      <!-- <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider px-4 mb-3">Menú Principal</div> -->
+      
+      <a href="{% url 'inicio' %}" class="nav-item group flex items-center px-4 py-3.5 rounded-xl font-medium transition-all duration-300 hover:bg-slate-700/50 {% if request.resolver_match.url_name == 'inicio' %}bg-gradient-to-r from-blue-500/20 to-blue-600/10 text-blue-300 active{% else %}text-slate-300 hover:text-white{% endif %}">
+        <div class="w-10 h-10 rounded-lg bg-slate-700/50 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors duration-300 {% if request.resolver_match.url_name == 'inicio' %}bg-blue-500/20{% endif %}">
+          <i class="fas fa-home text-lg"></i>
+        </div>
+        <span class="ml-4 font-medium">Inicio</span>
+        <i class="fas fa-chevron-right ml-auto text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
       </a>
 
-      <a href="{% url 'cotizador_app:cotizaciones' %}" class="flex items-center px-4 py-3 rounded-lg font-medium transition-all hover:bg-[#7CA8D5] hover:text-[#002B5B] {% if request.resolver_match.url_name == 'cotizaciones' %}bg-[#7CA8D5] text-[#002B5B]{% endif %}">
-        <i class="fas fa-file-invoice-dollar w-5"></i>
-        <span class="ml-3">Cotizaciones</span>
+      <a href="{% url 'cotizador_app:cotizaciones' %}" class="nav-item group flex items-center px-4 py-3.5 rounded-xl font-medium transition-all duration-300 hover:bg-slate-700/50 {% if request.resolver_match.url_name == 'cotizaciones' %}bg-gradient-to-r from-blue-500/20 to-blue-600/10 text-blue-300 active{% else %}text-slate-300 hover:text-white{% endif %}">
+        <div class="w-10 h-10 rounded-lg bg-slate-700/50 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors duration-300 {% if request.resolver_match.url_name == 'cotizaciones' %}bg-blue-500/20{% endif %}">
+          <i class="fas fa-file-invoice-dollar text-lg"></i>
+        </div>
+        <span class="ml-4 font-medium">Cotizaciones</span>
+        <i class="fas fa-chevron-right ml-auto text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
       </a>
 
-      <a href="{% url 'clientes' %}" class="flex items-center px-4 py-3 rounded-lg font-medium transition-all hover:bg-[#7CA8D5] hover:text-[#002B5B] {% if request.resolver_match.url_name == 'clientes' %}bg-[#7CA8D5] text-[#002B5B]{% endif %}">
-        <i class="fas fa-users w-5"></i>
-        <span class="ml-3">Clientes</span>
+      <a href="{% url 'clientes' %}" class="nav-item group flex items-center px-4 py-3.5 rounded-xl font-medium transition-all duration-300 hover:bg-slate-700/50 {% if request.resolver_match.url_name == 'clientes' %}bg-gradient-to-r from-blue-500/20 to-blue-600/10 text-blue-300 active{% else %}text-slate-300 hover:text-white{% endif %}">
+        <div class="w-10 h-10 rounded-lg bg-slate-700/50 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors duration-300 {% if request.resolver_match.url_name == 'clientes' %}bg-blue-500/20{% endif %}">
+          <i class="fas fa-users text-lg"></i>
+        </div>
+        <span class="ml-4 font-medium">Clientes</span>
+        <i class="fas fa-chevron-right ml-auto text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
       </a>
 
-      <a href="{% url 'materiales_icha' %}" class="flex items-center px-4 py-3 rounded-lg font-medium transition-all hover:bg-[#7CA8D5] hover:text-[#002B5B] {% if request.resolver_match.url_name == 'materiales_icha' %}bg-[#7CA8D5] text-[#002B5B]{% endif %}">
-        <i class="fas fa-box w-5"></i>
-        <span class="ml-3">Perfiles ICHA</span>
+      <a href="{% url 'materiales_icha' %}" class="nav-item group flex items-center px-4 py-3.5 rounded-xl font-medium transition-all duration-300 hover:bg-slate-700/50 {% if request.resolver_match.url_name == 'materiales_icha' %}bg-gradient-to-r from-blue-500/20 to-blue-600/10 text-blue-300 active{% else %}text-slate-300 hover:text-white{% endif %}">
+        <div class="w-10 h-10 rounded-lg bg-slate-700/50 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors duration-300 {% if request.resolver_match.url_name == 'materiales_icha' %}bg-blue-500/20{% endif %}">
+          <i class="fas fa-box text-lg"></i>
+        </div>
+        <span class="ml-4 font-medium">Perfiles ICHA</span>
+        <i class="fas fa-chevron-right ml-auto text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
       </a>
 
-      <a href="#" aria-disabled="true" class="flex items-center px-4 py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-        <i class="fas fa-chart-line w-5"></i>
-        <span class="ml-3">Reportes</span>
+      <div class="h-px bg-slate-700/50 my-4 mx-4"></div>
+
+      <a href="#" class="nav-item group flex items-center px-4 py-3.5 rounded-xl font-medium text-slate-500 cursor-not-allowed opacity-60">
+        <div class="w-10 h-10 rounded-lg bg-slate-700/30 flex items-center justify-center">
+          <i class="fas fa-chart-line text-lg"></i>
+        </div>
+        <span class="ml-4 font-medium">Reportes</span>
+        <span class="ml-auto text-xs bg-slate-700/50 px-2 py-1 rounded-md">Próximamente</span>
       </a>
-    </nav> 
+    </nav>
+
+    <!-- Footer Sidebar -->
+    <!-- <div class="p-4 border-t border-slate-700/50 bg-slate-800/40">
+      <div class="text-xs text-slate-500 text-center">
+        <p class="font-medium">v2.0.1</p>
+      </div>
+    </div> -->
   </aside>
 
-  <!-- Contenedor principal -->
-  <div class="ml-64 flex flex-col min-h-screen">
+  <!-- Main Container -->
+  <div id="mainContainer" class="ml-72 flex flex-col min-h-screen main-container">
 
-    <!-- Barra superior -->
-    <header class="bg-white shadow-md sticky top-0 z-30">
+    <!-- Header -->
+    <header class="glass-effect sticky top-0 z-30 border-b border-slate-200/60 shadow-sm">
       <div class="flex items-center justify-between px-8 py-4">
-        <h1 class="text-2xl font-bold text-[#002B5B]">{% block page_title %}{% endblock %}</h1>
+        <!-- Sidebar Toggle Button + Title -->
+        <div class="flex items-center space-x-4">
+          <button id="sidebarToggle" class="p-2.5 text-slate-600 hover:text-[#002B5B] hover:bg-[#4A90E2]/10 rounded-xl transition-all duration-300 group">
+            <i class="fas fa-bars text-lg"></i>
+          </button>
+          
+          <div>
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-[#002B5B] to-[#4A90E2] bg-clip-text text-transparent">
+              {% block page_title %}{% endblock %}
+            </h1>
+            <p class="text-sm text-slate-500 mt-0.5">{% block page_subtitle %}{% endblock %}</p>
+          </div>
+        </div>
 
-        <div class="flex items-center space-x-6">
+        <div class="flex items-center space-x-4">
 
-          <!-- Notificaciones -->
-          <button class="relative p-2 text-gray-600 hover:text-[#002B5B] hover:bg-blue-50 rounded-lg transition-all">
+          <!-- Search Bar (opcional) -->
+          <!-- <div class="hidden md:flex items-center bg-slate-100 rounded-xl px-4 py-2.5 w-64 border border-slate-200/60">
+            <i class="fas fa-search text-slate-400 text-sm"></i>
+            <input type="text" placeholder="Buscar..." class="bg-transparent border-none outline-none ml-2 text-sm w-full text-slate-700 placeholder-slate-400">
+          </div> -->
+
+          <!-- Notifications -->
+          <button class="relative p-3 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 group">
             <i class="fas fa-bell text-lg"></i>
-            <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full badge-pulse"></span>
+            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">3</span>
           </button>
 
-          <!-- Perfil -->
+          <!-- Profile Dropdown -->
           <div class="relative">
-            <button id="profileButton" class="flex items-center space-x-2 bg-blue-50 hover:bg-blue-100 rounded-full px-4 py-2 transition-all border border-blue-100">
-              <div class="w-9 h-9 bg-gradient-to-br from-[#003366] to-[#7CA8D5] rounded-full flex items-center justify-center text-white font-semibold">
+            <button id="profileButton" class="flex items-center space-x-3 bg-white hover:bg-slate-50 rounded-xl px-4 py-2.5 transition-all duration-300 border border-slate-200/60 shadow-sm hover:shadow-md group">
+              <div class="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-md">
                 {{ user.first_name.0|default:'U' }}{{ user.last_name.0|default:'A' }}
               </div>
-              
-              <span class="text-sm text-[#002B5B] font-semibold">{{ user.first_name|default:"Usuario" }}</span>
-              <i class="fas fa-chevron-down text-[#002B5B] text-xs"></i>
+              <div class="hidden lg:block text-left">
+                <p class="text-sm font-semibold text-slate-700">{{ user.first_name|default:"Usuario" }}</p>
+                <p class="text-xs text-slate-500">Administrador</p>
+              </div>
+              <i class="fas fa-chevron-down text-slate-400 text-xs group-hover:text-blue-600 transition-colors"></i>
             </button>
 
-            <!-- Dropdown -->
-            <div id="profileMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 border border-gray-200">
-              <a href="{% url 'perfil' %}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                <i class="fas fa-user mr-2"></i>Mi Perfil
+            <!-- Dropdown Menu -->
+            <div id="profileMenu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl py-2 border border-slate-200/60 animate-slide-in">
+              <div class="px-4 py-3 border-b border-slate-100">
+                <p class="text-sm font-semibold text-slate-700">{{ user.first_name|default:"Usuario" }} {{ user.last_name|default:"" }}</p>
+                <p class="text-xs text-slate-500">{{ user.email }}</p>
+              </div>
+              
+              <a href="{% url 'perfil' %}" class="flex items-center px-4 py-2.5 text-slate-700 hover:bg-slate-50 transition-colors group">
+                <i class="fas fa-user w-5 text-slate-400 group-hover:text-[#4A90E2]"></i>
+                <span class="ml-3 text-sm">Mi Perfil</span>
               </a>
-              <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-                <i class="fas fa-cog mr-2"></i>Configuración
+              
+              <a href="#" class="flex items-center px-4 py-2.5 text-slate-700 hover:bg-slate-50 transition-colors group">
+                <i class="fas fa-cog w-5 text-slate-400 group-hover:text-[#4A90E2]"></i>
+                <span class="ml-3 text-sm">Configuración</span>
               </a>
-              <hr class="my-2">
+              
+              <a href="#" class="flex items-center px-4 py-2.5 text-slate-700 hover:bg-slate-50 transition-colors group">
+                <i class="fas fa-question-circle w-5 text-slate-400 group-hover:text-[#4A90E2]"></i>
+                <span class="ml-3 text-sm">Ayuda</span>
+              </a>
+              
+              <hr class="my-2 border-slate-100">
+              
               <form action="{% url 'logout' %}" method="post">
                 {% csrf_token %}
-                <button type="submit" class="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100">
-                  <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
+                <button type="submit" class="w-full flex items-center px-4 py-2.5 text-red-600 hover:bg-red-50 transition-colors group">
+                  <i class="fas fa-sign-out-alt w-5"></i>
+                  <span class="ml-3 text-sm font-medium">Cerrar Sesión</span>
                 </button>
               </form>
-              
             </div>
           </div>
         </div>
       </div>
     </header>
 
-    <!-- Contenido -->
+    <!-- Main Content -->
     <main class="flex-1 p-8">
       {% block content %}
      
@@ -125,16 +293,53 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 mt-8 py-4 text-center text-gray-500 text-sm">
-      {% block footer %}
-      &copy; 2025 INMECSUTEC Ltda. — Todos los derechos reservados.
-      {% endblock %}
+    <footer class="bg-white/70 border-t border-slate-200/60 backdrop-blur-sm mt-8">
+      <div class="px-8 py-6">
+        <div class="flex flex-col md:flex-row items-center justify-between">
+          <div class="text-center md:text-left mb-4 md:mb-0">
+            <p class="text-sm text-slate-600 font-medium">
+              {% block footer %}
+              &copy; 2025 INMECSUTEC Ltda.
+              {% endblock %}
+            </p>
+            <p class="text-xs text-slate-500 mt-1">Ingeniería de Excelencia</p>
+          </div>
+          <div class="flex items-center space-x-6 text-xs text-slate-500">
+            <a href="#" class="hover:text-[#4A90E2] transition-colors">Términos</a>
+            <a href="#" class="hover:text-[#4A90E2] transition-colors">Privacidad</a>
+            <a href="#" class="hover:text-[#4A90E2] transition-colors">Soporte</a>
+          </div>
+        </div>
+      </div>
     </footer>
   </div>
 
-  <!-- Script para el menú de perfil -->
+  <!-- Scripts -->
   <script>
     document.addEventListener('DOMContentLoaded', function() {
+      const sidebar = document.getElementById('sidebar');
+      const mainContainer = document.getElementById('mainContainer');
+      const sidebarToggle = document.getElementById('sidebarToggle');
+      
+      // Sidebar toggle functionality
+      if (sidebarToggle && sidebar && mainContainer) {
+        sidebarToggle.addEventListener('click', function() {
+          sidebar.classList.toggle('sidebar-hidden');
+          mainContainer.classList.toggle('content-expanded');
+          
+          // Cambiar icono del botón
+          const icon = sidebarToggle.querySelector('i');
+          if (sidebar.classList.contains('sidebar-hidden')) {
+            icon.classList.remove('fa-bars');
+            icon.classList.add('fa-times');
+          } else {
+            icon.classList.remove('fa-times');
+            icon.classList.add('fa-bars');
+          }
+        });
+      }
+      
+      // Profile dropdown toggle
       const profileButton = document.getElementById('profileButton');
       const profileMenu = document.getElementById('profileMenu');
       
@@ -143,10 +348,23 @@
           e.stopPropagation();
           profileMenu.classList.toggle('hidden');
         });
-        document.addEventListener('click', function() {
-          profileMenu.classList.add('hidden');
+        
+        document.addEventListener('click', function(e) {
+          if (!profileMenu.contains(e.target) && !profileButton.contains(e.target)) {
+            profileMenu.classList.add('hidden');
+          }
         });
       }
+
+      // Animate navigation items on load
+      const navItems = document.querySelectorAll('.nav-item');
+      navItems.forEach((item, index) => {
+        item.style.animationDelay = `${index * 0.05}s`;
+        item.classList.add('animate-slide-in');
+      });
+
+      // Remove FOUC class
+      document.body.classList.remove('fouc-hidden');
     });
   </script>
 </body>

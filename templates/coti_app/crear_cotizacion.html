@@ -1,722 +1,942 @@
 {% extends 'base.html' %}
-{% block page_title %}Nueva Cotización de Costos{% endblock %}
+{% block page_title %}Nueva Cotización{% endblock %}
+{% block page_subtitle %}Configura los materiales y costos del proyecto{% endblock %}
 
 {% block content %}
 
+<style>
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes shimmer {
+        0% { background-position: -1000px 0; }
+        100% { background-position: 1000px 0; }
+    }
+    
+    .animate-slide-up {
+        animation: slideInUp 0.5s ease-out;
+    }
+    
+    .gradient-border {
+        position: relative;
+        background: linear-gradient(white, white) padding-box,
+                    linear-gradient(135deg, #002B5B, #4A90E2) border-box;
+        border: 2px solid transparent;
+    }
+    
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+    
+    .hover-lift {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .hover-lift:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(0, 43, 91, 0.1), 0 10px 10px -5px rgba(0, 43, 91, 0.04);
+    }
+    
+    .skeleton-loader {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 1000px 100%;
+        animation: shimmer 2s infinite;
+    }
+</style>
 
+<div class="min-h-screen p-4 md:p-8">
 
-<!-- Modal para Configurar Material Estructural -->
-<div id="structuralItemModal" class="fixed inset-0 z-50 bg-gray-800 bg-opacity-75 flex items-center justify-center p-4 transition-opacity duration-300" style="display: none;">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl transform transition-all duration-300 scale-95">
-        <div class="flex justify-between items-center p-5 border-b bg-gray-50 rounded-t-xl">
-            <div>
-                <h3 class="text-xl font-bold text-[#002B5B]">Configurar Material</h3>
-                <p id="modalProfileName" class="text-md text-gray-600 font-semibold"></p>
-            </div>
-            <button type="button" id="closeStructuralModal" class="text-gray-400 hover:text-gray-700 transition-colors">
-                <i class="fas fa-times fa-lg"></i>
-            </button>
-        </div>
-        
-        <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Columna de Especificaciones (No Editable) -->
-                <div class="bg-gray-100 p-5 rounded-lg border">
-                    <h4 class="text-sm font-bold text-gray-500 mb-4 uppercase tracking-wider">Especificaciones del Perfil</h4>
-                    <div class="space-y-3 text-md">
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600">Peso:</span>
-                            <span id="modalProfileWeight" class="font-bold text-gray-900 bg-gray-200 px-2 py-1 rounded"></span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600">Altura (d):</span>
-                            <span id="modalProfileHeight" class="font-bold text-gray-900 bg-gray-200 px-2 py-1 rounded"></span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600">Ancho (bf):</span>
-                            <span id="modalProfileWidth" class="font-bold text-gray-900 bg-gray-200 px-2 py-1 rounded"></span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600">Dimensión tf:</span>
-                            <span id="modalProfileDimTf" class="font-bold text-gray-900 bg-gray-200 px-2 py-1 rounded"></span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600">Dimensión tw:</span>
-                            <span id="modalProfileDimTw" class="font-bold text-gray-900 bg-gray-200 px-2 py-1 rounded"></span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600">Área:</span>
-                            <span id="modalProfileArea" class="font-bold text-gray-900 bg-gray-200 px-2 py-1 rounded"></span>
-                        </div>
-                    </div>
+    <!-- Header Section -->
+    <header class="mb-8 animate-slide-up">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div class="flex items-start space-x-4">
+                <div class="w-14 h-14 bg-gradient-to-br from-[#002B5B] to-[#4A90E2] rounded-2xl flex items-center justify-center shadow-lg">
+                    <i class="fas fa-file-invoice text-white text-2xl"></i>
                 </div>
-
-                <!-- Columna de Detalles para Cotización (Editable) -->
                 <div>
-                    <h4 class="text-sm font-bold text-gray-500 mb-4 uppercase tracking-wider">Detalles de la Cotización</h4>
-                    <div class="space-y-4">
-                        <div>
-                            <label for="modalLargoM" class="block text-sm font-bold text-gray-700">Largo (m)</label>
-                            <input type="number" id="modalLargoM" value="6.0" step="0.01" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 mt-1">
-                        </div>
-                        <div>
-                            <label for="modalCantComprar" class="block text-sm font-bold text-gray-700">Cantidad</label>
-                            <input type="number" id="modalCantComprar" value="1" min="1" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 mt-1">
-                        </div>
-                        <div>
-                            <label for="modalValorUnitario" class="block text-sm font-bold text-red-600">Valor Unitario ($)</label>
-                            <input type="number" id="modalValorUnitario" value="0" min="0" step="0.01" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-red-500 focus:ring-red-500 p-3 mt-1 font-bold text-red-700">
-                        </div>
-                        <input type="hidden" id="modalProfileId">
-                        <input type="hidden" id="modalProfilePesoKgM">
-                        <input type="hidden" id="modalProfileNombre">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="px-3 py-1 bg-[#4A90E2]/10 text-[#002B5B] text-xs font-bold rounded-full border border-[#4A90E2]/20">
+                            Nuevo Proyecto
+                        </span>
+                        <span class="text-xs text-slate-500">
+                            <i class="far fa-clock mr-1"></i>
+                            Guardado automático
+                        </span>
                     </div>
+                    <p class="text-slate-600 text-sm">Complete la información del proyecto estructural</p>
                 </div>
             </div>
+            
+            <div class="flex gap-3 w-full md:w-auto">
+                <button type="button" class="flex-1 md:flex-none px-6 py-3 bg-white border-2 border-slate-200 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 transition-all shadow-sm">
+                    <i class="fas fa-save mr-2"></i>Guardar Borrador
+                </button>
+                <button type="submit" form="cotizacionForm" class="flex-1 md:flex-none px-6 py-3 bg-gradient-to-r from-[#002B5B] to-[#4A90E2] hover:from-[#001f42] hover:to-[#3b7bc9] text-white font-bold rounded-xl shadow-lg shadow-[#4A90E2]/30 transition-all transform hover:scale-105">
+                    <i class="fas fa-check-circle mr-2"></i>Crear Cotización
+                </button>
+            </div>
         </div>
-
-        <div class="flex justify-end p-5 bg-gray-50 border-t rounded-b-xl">
-            <button type="button" id="cancelStructuralModal" class="px-5 py-2 text-sm font-semibold rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 mr-3 transition-colors">Cancelar</button>
-            <button type="button" id="confirmAddStructuralItem" class="px-6 py-3 font-semibold rounded-lg shadow-md text-white bg-green-600 hover:bg-green-700 transition-colors flex items-center">
-                <i class="fas fa-plus mr-2"></i> Añadir al Listado
-            </button>
-        </div>
-    </div>
-</div>
-
-
-<!-- Contenido Principal de la Página -->
-<div class="max-w-7xl mx-auto p-6 bg-white rounded-xl shadow-lg border border-gray-200">
-    <h1 class="text-3xl font-extrabold text-[#002B5B] mb-6 border-b-4 border-[#7CA8D5] pb-3">
-        Crear Nueva Cotización
-    </h1>
-
-    {% if error_message %}
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <strong class="font-bold">Error:</strong>
-            <span class="block sm:inline">{{ error_message }}</span>
-        </div>
-    {% endif %}
-
-    {% if form.errors %}
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <strong class="font-bold">Por favor, corrija los siguientes errores:</strong>
-            <ul class="list-disc ml-5">
-                {% for field in form %}
-                    {% for error in field.errors %}
-                        <li><span class="font-semibold">{{ field.label }}:</span> {{ error }}</li>
-                    {% endfor %}
-                {% endfor %}
-                {% if form.non_field_errors %}
-                    {% for error in form.non_field_errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                {% endif %}
-            </ul>
-        </div>
-    {% endif %}
+    </header>
 
     <form method="POST" id="cotizacionForm">
         {% csrf_token %}
-        
-        <!-- 1. Información General -->
-        <fieldset class="mb-10">
-            <legend class="text-xl font-bold text-[#002B5B] mb-4 flex items-center"><i class="fas fa-user-tie mr-3 text-[#7CA8D5]"></i>Información General</legend>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 border border-gray-200 rounded-lg bg-gray-50">
-                <div>
-                    <label for="cliente_id" class="block text-sm font-bold text-gray-700 mb-1">Cliente (Opcional)</label>
-                    <div class="flex space-x-2">
-                        <select name="cliente" id="cliente_id" class="flex-grow border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3">
-                            <option value="">Seleccione un cliente...</option>
-                            {% for cliente in clientes_disponibles %}
-                                <option value="{{ cliente.id }}">{{ cliente.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                        <a href="{% url 'añadir_cliente' %}" class="flex-shrink-0 px-4 py-2 font-medium rounded-lg shadow-md text-white bg-amber-500 hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-400 transition-all duration-150" title="Añadir nuevo cliente">
-                            <i class="fas fa-user-plus"></i>
-                        </a>
-                    </div>
-                    <p id="empty-client-message" class="text-sm text-gray-500 mt-2" style="display: none;">No hay clientes. ¡Añade uno para empezar!</p>
-                </div>
-                <div>
-                    <label for="proyecto_nombre" class="block text-sm font-bold text-gray-700 mb-1">Nombre del Proyecto</label>
-                    <input type="text" name="proyecto_nombre" id="proyecto_nombre" required class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3" placeholder="Ej: Galpón Industrial para Cliente X">
-                </div>
-            </div>
-        </fieldset>
-        
-        <!-- 2. Material Estructural -->
-        <fieldset class="mb-10">
-            <legend class="text-xl font-bold text-[#002B5B] mb-4 flex items-center"><i class="fas fa-cubes mr-3 text-[#7CA8D5]"></i>Material Estructural</legend>
-            
-            <!-- Panel de Búsqueda y Filtros -->
-            <div class="p-5 border border-gray-200 rounded-lg bg-gray-50 mb-4">
-                <!-- Flujo Experto: Búsqueda Directa -->
-                <div class="mb-4">
-                    <label for="profile-search" class="block text-sm font-bold text-gray-700 mb-2">Búsqueda Rápida</label>
-                    <div class="relative">
-                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                        <input type="text" id="profile-search" placeholder="Buscar por nombre, ej: IPE 300..." class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 pl-10">
-                        <div id="autocomplete-results" class="absolute z-20 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 top-full max-h-60 overflow-y-auto" style="display: none;"></div>
-                    </div>
-                </div>
 
-                <div class="text-center my-4">
-                    <span class="text-sm font-semibold text-gray-500 bg-white px-3 py-1 rounded-full border">O</span>
-                </div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-                <!-- Flujo Novato: Filtros Dependientes -->
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Búsqueda Guiada (Filtros)</label>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div>
-                            <label for="category-select" class="block text-xs font-semibold text-gray-600 mb-1">1. Tipo de Perfil</label>
-                            <select id="category-select" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3">
-                                <option value="">Seleccionar...</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="height-select" class="block text-xs font-semibold text-gray-600 mb-1">2. Altura (d)</label>
-                            <select id="height-select" disabled class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 bg-gray-100"><option>---</option></select>
-                        </div>
-                        <div>
-                            <label for="width-select" class="block text-xs font-semibold text-gray-600 mb-1">3. Ancho (bf)</label>
-                            <select id="width-select" disabled class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 bg-gray-100"><option>---</option></select>
-                        </div>
-                        <div>
-                            <label for="weight-select" class="block text-xs font-semibold text-gray-600 mb-1">4. Peso (kg/m)</label>
-                            <select id="weight-select" disabled class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 bg-gray-100"><option>---</option></select>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Botón de añadir para Búsqueda Guiada -->
-                <div id="guided-add-button-container" class="mt-4 text-center" style="display: none;">
-                    <button type="button" id="add-from-guided-btn" class="px-6 py-3 font-semibold rounded-lg shadow-md text-white bg-green-600 hover:bg-green-700 transition-colors flex items-center justify-center mx-auto">
-                        <i class="fas fa-plus mr-2"></i>
-                        <span>Añadir Perfil: <span id="guided-profile-name" class="font-bold"></span></span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Tabla de Materiales Seleccionados -->
-            <div class="overflow-x-auto shadow-md rounded-lg border">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-[#002B5B] text-white">
-                        <tr>
-                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Material</th>
-                            <th class="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider">Largo (m)</th>
-                            <th class="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider">Cantidad</th>
-                            <th class="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider">Valor Unit. ($)</th>
-                            <th class="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider">Peso Total (kg)</th>
-                            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider">Subtotal ($)</th>
-                            <th class="px-3 py-3 text-center"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="structuralItemsTableBody" class="bg-white divide-y divide-gray-100">
-                        <!-- Filas se añadirán dinámicamente -->
-                    </tbody>
-                    <tfoot class="bg-gray-100 border-t-2 border-gray-300">
-                        <tr>
-                            <td colspan="4" class="px-4 py-3 text-right text-md font-bold text-gray-800">SUBTOTAL ESTRUCTURAL:</td>
-                            <td class="px-3 py-3 text-right text-md font-extrabold text-[#002B5B]"><span id="structuralTotalWeight">0.00 kg</span></td>
-                            <td class="px-4 py-3 text-right text-md font-extrabold text-[#002B5B]"><span id="structuralTotalValue">$ 0</span></td>
-                            <td></td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-        </fieldset>
-
-        <!-- 3. Insumos y Costos Adicionales -->
-        <fieldset class="mb-10">
-            <legend class="text-xl font-bold text-[#002B5B] mb-4 flex items-center"><i class="fas fa-dolly-flatbed mr-3 text-[#7CA8D5]"></i>Insumos y Costos Adicionales</legend>
-            <div class="overflow-x-auto shadow-md rounded-lg border">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-[#002B5B] text-white">
-                        <tr>
-                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Descripción/Concepto</th>
-                            <th class="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider">Unidad</th>
-                            <th class="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider">Cantidad</th>
-                            <th class="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider">Valor Unitario ($)</th>
-                            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider">Subtotal ($)</th>
-                            <th class="px-3 py-3 text-center"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="overheadItemsTableBody" class="bg-white divide-y divide-gray-100">
-                        <!-- Filas se añadirán dinámicamente -->
-                    </tbody>
-                    <tfoot class="bg-gray-100">
-                        <!-- Fila para añadir nuevos insumos -->
-                        <tr class="bg-gray-200/70">
-                            <td class="px-3 py-2"><input type="text" id="overheadDesc" placeholder="Transporte, pintura..." class="w-full border-gray-300 rounded-md shadow-sm p-2 text-sm focus:border-indigo-500 focus:ring-indigo-500"></td>
-                            <td class="px-2 py-2"><input type="text" id="overheadUnidad" placeholder="Global, Viaje..." class="w-full border-gray-300 rounded-md shadow-sm p-2 text-sm focus:border-indigo-500 focus:ring-indigo-500 text-center"></td>
-                            <td class="px-2 py-2"><input type="number" id="overheadCantidad" value="1" min="0" step="0.01" class="w-full border-gray-300 rounded-md shadow-sm p-2 text-sm focus:border-indigo-500 focus:ring-indigo-500 text-center"></td>
-                            <td class="px-2 py-2"><input type="number" id="overheadValor" value="0" min="0" step="0.01" class="w-full border-gray-300 rounded-md shadow-sm p-2 text-sm focus:border-red-500 focus:ring-red-500 text-right"></td>
-                            <td class="px-2 py-2 text-center">
-                                <button type="button" id="addOverheadItemButton" class="w-full px-3 py-2 font-medium rounded-lg shadow-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
-                                    <i class="fas fa-plus"></i> Añadir
-                                </button>
-                            </td>
-                            <td></td>
-                        </tr>
-                        <!-- Fila de Subtotal de Insumos -->
-                        <tr class="border-t-2 border-gray-300">
-                            <td colspan="4" class="px-4 py-3 text-right text-md font-bold text-gray-800">SUBTOTAL INSUMOS:</td>
-                            <td class="px-4 py-3 text-right text-md font-extrabold text-[#002B5B]"><span id="overheadTotalValue">$ 0</span></td>
-                            <td></td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-        </fieldset>
-
-        <!-- 4. Resumen y Cierre -->
-        <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-            <!-- Notas Internas -->
-            <div>
-                <label for="notas_internas" class="block text-sm font-bold text-gray-700 mb-2">Notas Internas</label>
-                <textarea name="notas_internas" id="notas_internas" rows="6" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3" placeholder="Anotaciones para el equipo, detalles de costos, etc."></textarea>
-            </div>
-            
-            <!-- Resumen Final y CTA -->
-            <div class="space-y-6">
-                <div class="flex justify-end p-6 bg-red-50 border-2 border-red-200 rounded-lg">
-                    <div class="text-right">
-                        <p class="text-xl font-bold text-gray-700">TOTAL GENERAL DE COSTOS</p>
-                        <p class="text-5xl font-extrabold text-red-600 my-2">
-                            <span id="grandTotalGeneral">$ 0</span>
-                        </p>
-                    </div>
-                </div>
+            <!-- Left Sidebar - Project Info -->
+            <div class="lg:col-span-4 space-y-6">
                 
-                <div class="flex justify-end">
-                    <button type="submit" class="w-full md:w-auto px-12 py-4 text-lg font-bold rounded-lg shadow-xl text-white bg-[#002B5B] hover:bg-[#001f3f] focus:outline-none focus:ring-4 focus:ring-blue-300 transform hover:scale-105 transition-all duration-200">
-                        <i class="fas fa-save mr-3"></i> Guardar Cotización
-                    </button>
+                <!-- Datos Generales -->
+                <div class="glass-card rounded-2xl shadow-lg border border-slate-200/60 p-6 hover-lift animate-slide-up">
+                    <div class="flex items-center mb-6">
+                        <div class="w-10 h-10 bg-gradient-to-br from-[#4A90E2]/20 to-[#002B5B]/10 rounded-xl flex items-center justify-center mr-3">
+                            <i class="fas fa-folder-open text-[#002B5B]"></i>
+                        </div>
+                        <h3 class="font-bold text-[#002B5B] text-lg">Información del Proyecto</h3>
+                    </div>
+                    
+                    <div class="space-y-5">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">
+                                <i class="fas fa-pen mr-1 text-[#4A90E2]"></i>Nombre del Proyecto
+                            </label>
+                            <input type="text" name="proyecto_nombre" id="proyecto_nombre" required 
+                                class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 font-medium focus:ring-2 focus:ring-[#4A90E2] focus:border-[#4A90E2] placeholder-slate-400 transition-all" 
+                                placeholder="Ej: Galpón Industrial Norte">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">
+                                <i class="fas fa-user-tie mr-1 text-[#4A90E2]"></i>Cliente
+                            </label>
+                            <div class="flex gap-2">
+                                <select name="cliente" id="cliente_id" class="flex-1 bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:ring-2 focus:ring-[#4A90E2] transition-all">
+                                    <option value="">Seleccionar cliente...</option>
+                                    {% for cliente in clientes_disponibles %}
+                                        <option value="{{ cliente.id }}">{{ cliente.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="button" id="openClientModalButton" class="w-12 h-12 bg-gradient-to-br from-[#4A90E2] to-[#002B5B] text-white hover:shadow-lg rounded-xl transition-all transform hover:scale-105">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            <p id="empty-client-message" class="text-xs text-red-500 mt-2 hidden font-semibold">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>Debe seleccionar un cliente
+                            </p>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Cost Summary Card -->
+                <div class="rounded-2xl shadow-2xl border border-[#002B5B]/20 p-6 bg-gradient-to-br from-[#002B5B] to-[#003d7a] text-white lg:sticky lg:top-24 hover-lift animate-slide-up relative overflow-hidden">
+                    
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full mix-blend-overlay filter blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+
+                    <div class="flex justify-between items-start mb-6 relative z-10">
+                        <div>
+                            <p class="text-blue-200 text-sm font-semibold uppercase tracking-wide">Inversión Total</p>
+                            <h2 class="text-5xl font-black mt-2 tracking-tight" id="grandTotalGeneral">$ 0</h2>
+                        </div>
+                        <div class="p-4 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/20">
+                            <i class="fas fa-calculator text-blue-300 text-2xl"></i>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4 pt-6 border-t border-white/20 relative z-10">
+                        <div class="bg-white/5 rounded-xl p-4 backdrop-blur-sm border border-white/10">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-white/90 text-sm flex items-center">
+                                    <i class="fas fa-industry mr-2 text-blue-300"></i>Materiales
+                                </span>
+                                <span class="font-bold text-lg" id="structuralTotalValue">$ 0</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="text-white/60">Peso Acero</span>
+                                <span class="font-mono font-semibold text-blue-300" id="structuralTotalWeight">0.00 kg</span>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white/5 rounded-xl p-4 backdrop-blur-sm border border-white/10">
+                            <div class="flex justify-between items-center">
+                                <span class="text-white/90 text-sm flex items-center">
+                                    <i class="fas fa-tools mr-2 text-blue-300"></i>Insumos
+                                </span>
+                                <span class="font-bold text-lg" id="overheadTotalValue">$ 0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-6 border-t border-white/20 relative z-10">
+                        <label class="text-xs text-white/70 uppercase font-bold mb-2 block">
+                            <i class="fas fa-sticky-note mr-1"></i>Notas Internas
+                        </label>
+                        <textarea name="notas_internas" id="notas_internas" rows="3" 
+                            class="w-full bg-black/20 border border-white/10 rounded-xl text-sm text-white placeholder-white/40 focus:ring-2 focus:ring-blue-400 p-3 backdrop-blur-sm resize-none"
+                            placeholder="Observaciones..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="lg:col-span-8 space-y-6">
+
+                <!-- Material Search Section -->
+                <div class="glass-card rounded-2xl shadow-lg border border-slate-200/60 p-8 relative overflow-hidden animate-slide-up" style="animation-delay: 0.1s;">
+                    <!-- Decorative gradient blob -->
+                    <div class="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-[#4A90E2]/20 to-transparent rounded-full mix-blend-multiply filter blur-3xl opacity-70 -mr-32 -mt-32 pointer-events-none"></div>
+
+                    <div class="relative z-10">
+                        <div class="flex items-center mb-6">
+                            <div class="w-12 h-12 bg-gradient-to-br from-[#4A90E2] to-[#002B5B] rounded-xl flex items-center justify-center mr-4 shadow-lg">
+                                <i class="fas fa-search text-white text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-[#002B5B]">Búsqueda de Perfiles</h3>
+                                <p class="text-sm text-slate-500">Encuentra el material estructural perfecto</p>
+                            </div>
+                        </div>
+
+                        <!-- Search Input -->
+                        <div class="relative mb-8">
+                            <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                                <i class="fas fa-bolt text-yellow-500 text-xl animate-pulse"></i>
+                            </div>
+                            <input type="text" id="profile-search" 
+                                class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 text-lg rounded-2xl px-6 py-5 pl-16 focus:ring-2 focus:ring-[#4A90E2] focus:border-[#4A90E2] placeholder-slate-400 transition-all font-medium"
+                                placeholder="Buscar perfil rápido (ej: H 200, IPE 300, C 150)...">
+                            
+                            <div id="autocomplete-results" class="absolute w-full mt-3 bg-white rounded-2xl shadow-2xl z-50 overflow-hidden border-2 border-slate-200 hidden max-h-96 overflow-y-auto"></div>
+                        </div>
+
+                        <!-- Filter Grid -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="group">
+                                <label class="text-xs font-bold text-slate-500 uppercase mb-2 block">Tipo</label>
+                                <div class="relative">
+                                    <select id="category-select" class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:ring-2 focus:ring-[#4A90E2] cursor-pointer appearance-none transition-all">
+                                        <option value="">Seleccionar...</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="group">
+                                <label class="text-xs font-bold text-slate-500 uppercase mb-2 block">Altura</label>
+                                <div class="relative">
+                                    <select id="height-select" disabled class="w-full bg-slate-100 border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-400 font-medium appearance-none transition-all disabled:cursor-not-allowed">
+                                        <option>Primero tipo...</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="group">
+                                <label class="text-xs font-bold text-slate-500 uppercase mb-2 block">Ancho</label>
+                                <div class="relative">
+                                    <select id="width-select" disabled class="w-full bg-slate-100 border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-400 font-medium appearance-none transition-all disabled:cursor-not-allowed">
+                                        <option>Primero altura...</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="group">
+                                <label class="text-xs font-bold text-slate-500 uppercase mb-2 block">Peso</label>
+                                <div class="relative">
+                                    <select id="weight-select" disabled class="w-full bg-slate-100 border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-400 font-medium appearance-none transition-all disabled:cursor-not-allowed">
+                                        <option>Primero ancho...</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Guided Selection Button -->
+                        <div id="guided-add-button-container" class="mt-6 hidden">
+                            <button type="button" id="add-from-guided-btn" class="w-full py-4 bg-gradient-to-r from-[#4A90E2] to-[#002B5B] hover:from-[#3b7bc9] hover:to-[#001f42] text-white rounded-2xl font-bold transition-all flex justify-center items-center gap-3 shadow-lg shadow-[#4A90E2]/30 transform hover:scale-[1.02]">
+                                <i class="fas fa-check-circle text-xl"></i>
+                                <span>Agregar:</span> 
+                                <span id="guided-profile-name" class="font-mono bg-white/20 px-3 py-1 rounded-lg"></span>
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Structural Items Table -->
+                <div class="glass-card rounded-2xl shadow-lg border border-slate-200/60 overflow-hidden hover-lift animate-slide-up" style="animation-delay: 0.2s;">
+                    <div class="p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-gradient-to-br from-[#4A90E2]/20 to-[#002B5B]/10 rounded-lg flex items-center justify-center mr-3">
+                                    <i class="fas fa-cubes text-[#002B5B]"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-[#002B5B] text-lg">Materiales Estructurales</h4>
+                                    <p class="text-xs text-slate-500">Lista de perfiles seleccionados</p>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 bg-[#4A90E2]/10 text-[#002B5B] text-xs font-bold rounded-lg border border-[#4A90E2]/20">
+                                <i class="fas fa-layer-group mr-1"></i>Items: <span id="structural-count">0</span>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <thead>
+                                    <tr class="text-xs text-slate-600 font-bold uppercase tracking-wider border-b-2 border-slate-200 bg-slate-50">
+                                        <th class="px-3 py-4 text-left">Material</th>
+                                        <th class="px-3 py-4 text-center">Largo (M)</th> <th class="px-3 py-4 text-center">U. Comercial</th>
+                                        <th class="px-3 py-4 text-center">C. Necesaria</th>
+                                        <th class="px-3 py-4 text-center">A Comprar</th>
+                                        <th class="px-3 py-4 text-right">Peso (Kg/m)</th>
+                                        <th class="px-3 py-4 text-right">Peso Total</th>
+                                        <th class="px-3 py-4 text-right">Valor Unit.</th>
+                                        <th class="px-3 py-4 text-right">Valor Total</th>
+                                        <th class="px-3 py-4"></th>
+                                    </tr>
+                                </thead>
+                            </thead>
+                            <tbody id="structuralItemsTableBody" class="text-sm divide-y divide-slate-100">
+                                <tr id="empty-state-row">
+                                    <td colspan="7" class="px-6 py-16 text-center bg-slate-50/50">
+                                        <div class="flex flex-col items-center">
+                                            <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                                                <i class="fas fa-cubes text-4xl text-slate-300"></i>
+                                            </div>
+                                            <p class="text-slate-400 font-medium">No hay materiales agregados</p>
+                                            <p class="text-slate-400 text-xs mt-1">Utilice el buscador arriba para agregar perfiles</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Overhead Items Table -->
+                <div class="glass-card rounded-2xl shadow-lg border border-slate-200/60 overflow-hidden hover-lift animate-slide-up" style="animation-delay: 0.3s;">
+                    <div class="p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-gradient-to-br from-[#4A90E2]/20 to-[#002B5B]/10 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-tools text-[#002B5B]"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-[#002B5B] text-lg">Costos Adicionales e Insumos</h4>
+                                <p class="text-xs text-slate-500">Mano de obra, transporte y otros</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <table class="w-full">
+                            <tbody id="overheadItemsTableBody" class="divide-y divide-slate-100"></tbody>
+                            <tfoot>
+                                <tr class="bg-slate-50 rounded-xl">
+                                    <td class="p-3">
+                                        <input type="text" id="overheadDesc" placeholder="Descripción del insumo..." 
+                                            class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#4A90E2] font-medium transition-all">
+                                    </td>
+                                    <td class="p-3 w-28">
+                                        <input type="text" id="overheadUnidad" placeholder="Unidad" 
+                                            class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-center transition-all">
+                                    </td>
+                                    <td class="p-3 w-24">
+                                        <input type="number" id="overheadCantidad" value="1" 
+                                            class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-center font-semibold transition-all">
+                                    </td>
+                                    <td class="p-3 w-36">
+                                        <input type="number" id="overheadValor" value="0" 
+                                            class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-sm text-right font-semibold transition-all">
+                                    </td>
+                                    <td class="p-3 w-12">
+                                        <button type="button" id="addOverheadItemButton" 
+                                            class="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-[#4A90E2] to-[#002B5B] hover:from-[#3b7bc9] hover:to-[#001f42] text-white rounded-xl shadow-lg transition-all transform hover:scale-110">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
             </div>
         </div>
-        
-        <!-- Inputs ocultos para enviar datos al backend -->
+
         <input type="hidden" name="structural_items_json" id="structuralItemsJsonInput">
         <input type="hidden" name="overhead_items_json" id="overheadItemsJsonInput">
         <input type="hidden" name="total_costo" id="totalCostoInput">
     </form>
 </div>
 
+<!-- Structural Item Modal -->
+<div id="structuralItemModal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 transition-opacity duration-300" style="display: none;">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl transform transition-all duration-300 scale-95 overflow-hidden border-2 border-slate-200">
+        <div class="bg-gradient-to-r from-[#002B5B] to-[#4A90E2] p-6 text-white">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 class="text-2xl font-bold mb-1">Configurar Material</h3>
+                    <p id="modalProfileName" class="text-white/80 text-lg font-mono mt-2 bg-white/10 px-3 py-1 rounded-lg inline-block"></p>
+                </div>
+                <button type="button" id="closeStructuralModal" class="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl transition-colors flex items-center justify-center">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Specifications Card -->
+            <div class="bg-gradient-to-br from-slate-50 to-slate-100 p-6 rounded-2xl border-2 border-slate-200">
+                <h4 class="font-bold text-slate-600 uppercase text-xs mb-4 flex items-center">
+                    <i class="fas fa-info-circle mr-2 text-[#4A90E2]"></i>Especificaciones Técnicas
+                </h4>
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between items-center p-2 bg-white rounded-lg">
+                        <span class="text-slate-600 font-medium">Peso Lineal:</span> 
+                        <span id="modalProfileWeight" class="font-mono font-bold text-[#002B5B]"></span>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-white rounded-lg">
+                        <span class="text-slate-600 font-medium">Altura (d):</span> 
+                        <span id="modalProfileHeight" class="font-mono font-bold text-[#002B5B]"></span>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-white rounded-lg">
+                        <span class="text-slate-600 font-medium">Ancho (bf):</span> 
+                        <span id="modalProfileWidth" class="font-mono font-bold text-[#002B5B]"></span>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-white rounded-lg">
+                        <span class="text-slate-600 font-medium">Espesores:</span> 
+                        <span class="font-mono font-bold text-[#002B5B]">
+                            <span id="modalProfileDimTf"></span> / <span id="modalProfileDimTw"></span> mm
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-gradient-to-r from-[#4A90E2]/10 to-[#002B5B]/5 rounded-lg border border-[#4A90E2]/20 mt-3">
+                        <span class="text-[#002B5B] font-bold">Área Total:</span> 
+                        <span id="modalProfileArea" class="font-mono font-bold text-[#002B5B]"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Fields -->
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-2 flex items-center">
+                        <i class="fas fa-ruler mr-2 text-[#4A90E2]"></i>Largo del Perfil (metros)
+                    </label>
+                    <input type="number" id="modalLargoM" value="6.0" step="0.01" 
+                        class="w-full border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-[#4A90E2] focus:border-[#4A90E2] p-4 bg-white text-xl font-bold text-[#002B5B] transition-all">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-2 flex items-center">
+                            <i class="fas fa-sort-numeric-up mr-2 text-[#4A90E2]"></i>Cantidad
+                        </label>
+                        <input type="number" id="modalCantComprar" value="1" min="1" 
+                            class="w-full border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-[#4A90E2] p-3 bg-white font-bold text-lg text-[#002B5B] transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-red-600 uppercase mb-2 flex items-center">
+                            <i class="fas fa-dollar-sign mr-2"></i>Precio Unitario
+                        </label>
+                        <input type="number" id="modalValorUnitario" value="0" step="0.01"
+                            class="w-full border-2 border-red-200 text-red-700 rounded-xl focus:ring-2 focus:ring-red-500 p-3 bg-red-50 font-bold text-lg transition-all">
+                    </div>
+                </div>
+                
+                <input type="hidden" id="modalProfileId">
+                <input type="hidden" id="modalProfilePesoKgM">
+                <input type="hidden" id="modalProfileNombre">
+                
+                <!-- Cost Preview -->
+                <div class="bg-gradient-to-br from-[#002B5B] to-[#4A90E2] text-white p-4 rounded-xl">
+                    <div class="text-xs uppercase font-bold mb-1 opacity-80">Subtotal Estimado</div>
+                    <div class="text-3xl font-black" id="modalSubtotalPreview">$ 0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 bg-slate-50 border-t-2 border-slate-200 flex justify-end gap-3">
+            <button type="button" id="cancelStructuralModal" 
+                class="px-6 py-3 text-slate-700 font-bold hover:bg-slate-200 rounded-xl transition-all border-2 border-slate-300">
+                Cancelar
+            </button>
+            <button type="button" id="confirmAddStructuralItem" 
+                class="px-8 py-3 bg-gradient-to-r from-[#002B5B] to-[#4A90E2] hover:from-[#001f42] hover:to-[#3b7bc9] text-white font-bold rounded-xl shadow-lg shadow-[#4A90E2]/30 transition-all transform hover:scale-105">
+                <i class="fas fa-check-circle mr-2"></i>Agregar Material
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // --- STATE MANAGEMENT ---
-    let structuralItems = [];
-    let overheadItems = [];
-
-    // --- DOM ELEMENT REFERENCES ---
-    const form = document.getElementById('cotizacionForm');
-    // Client
-    const clientSelect = document.getElementById('cliente_id');
-    const emptyClientMessage = document.getElementById('empty-client-message');
-    const addClientModal = document.getElementById('addClientModal');
-    const openClientModalButton = document.getElementById('openClientModalButton');
-    const closeClientModal = document.getElementById('closeClientModal');
-    const cancelClientModal = document.getElementById('cancelClientModal');
-    const saveClientButton = document.getElementById('saveClientButton');
-    // Structural Search
-    const profileSearchInput = document.getElementById('profile-search');
-    const autocompleteResults = document.getElementById('autocomplete-results');
-    // Structural Filters
-    const categorySelect = document.getElementById('category-select');
-    const heightSelect = document.getElementById('height-select');
-    const widthSelect = document.getElementById('width-select');
-    const weightSelect = document.getElementById('weight-select');
-    // Guided Search Add Button
-    const guidedAddButtonContainer = document.getElementById('guided-add-button-container');
-    const guidedProfileName = document.getElementById('guided-profile-name');
-    const addFromGuidedBtn = document.getElementById('add-from-guided-btn');
-    // Structural Modal
-    const structuralItemModal = document.getElementById('structuralItemModal');
-    const closeStructuralModal = document.getElementById('closeStructuralModal');
-    const cancelStructuralModal = document.getElementById('cancelStructuralModal');
-    const confirmAddStructuralItem = document.getElementById('confirmAddStructuralItem');
-    const modalProfileName = document.getElementById('modalProfileName');
-    const modalProfileWeight = document.getElementById('modalProfileWeight');
-    const modalProfileHeight = document.getElementById('modalProfileHeight');
-    const modalProfileWidth = document.getElementById('modalProfileWidth');
-    const modalProfileDimTf = document.getElementById('modalProfileDimTf');
-    const modalProfileDimTw = document.getElementById('modalProfileDimTw');
-    const modalProfileArea = document.getElementById('modalProfileArea');
-    const modalLargoM = document.getElementById('modalLargoM');
-    const modalCantComprar = document.getElementById('modalCantComprar');
-    const modalValorUnitario = document.getElementById('modalValorUnitario');
-    const modalProfileId = document.getElementById('modalProfileId');
-    const modalProfilePesoKgM = document.getElementById('modalProfilePesoKgM');
-    const modalProfileNombre = document.getElementById('modalProfileNombre');
-    // Tables & Totals
-    const structuralItemsTableBody = document.getElementById('structuralItemsTableBody');
-    const overheadItemsTableBody = document.getElementById('overheadItemsTableBody');
-    const addOverheadItemButton = document.getElementById('addOverheadItemButton');
-    const overheadDesc = document.getElementById('overheadDesc');
-    const overheadUnidad = document.getElementById('overheadUnidad');
-    const overheadCantidad = document.getElementById('overheadCantidad');
-    const overheadValor = document.getElementById('overheadValor');
-    const structuralTotalValueSpan = document.getElementById('structuralTotalValue');
-    const structuralTotalWeightSpan = document.getElementById('structuralTotalWeight');
-    const overheadTotalValueSpan = document.getElementById('overheadTotalValue');
-    const grandTotalGeneralSpan = document.getElementById('grandTotalGeneral');
-    // Hidden Inputs
-    const structuralItemsJsonInput = document.getElementById('structuralItemsJsonInput');
-    const overheadItemsJsonInput = document.getElementById('overheadItemsJsonInput');
-    const totalCostoInput = document.getElementById('totalCostoInput');
-
-    // --- UTILITY FUNCTIONS ---
-    const formatCurrency = (value) => `$ ${Math.round(value).toLocaleString('es-CL')}`;
-    const formatWeight = (value) => `${value.toFixed(2)} kg`;
-    const getCsrfToken = () => document.querySelector('[name=csrfmiddlewaretoken]').value;
-    const debounce = (func, delay) => {
-        let timeout;
-        return function(...args) {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(this, args), delay);
-        };
-    };
-
-    // --- DATA FETCHING ---
-    function fetchClients() {
-        // Mockup por ahora
-        clientSelect.innerHTML = '<option value="">Seleccione un cliente...</option>';
-        emptyClientMessage.style.display = 'block';
-    }
-
-    // --- UI & MODAL LOGIC ---
-    function setupModal(modal, openBtn, closeBtn, cancelBtn) {
-        const open = () => {
-            modal.style.display = 'flex';
-            setTimeout(() => modal.classList.add('opacity-100'), 10);
-            setTimeout(() => modal.querySelector('.transform').classList.add('scale-100'), 50);
-        };
-        const close = () => {
-            modal.querySelector('.transform').classList.remove('scale-100');
-            modal.classList.remove('opacity-100');
-            setTimeout(() => modal.style.display = 'none', 300);
-        };
-        if (openBtn) openBtn.addEventListener('click', open);
-        if (closeBtn) closeBtn.addEventListener('click', close);
-        if (cancelBtn) cancelBtn.addEventListener('click', close);
-        return close;
-    }
-    const closeClientModalFn = setupModal(addClientModal, openClientModalButton, closeClientModal, cancelClientModal);
-    const closeStructuralModalFn = setupModal(structuralItemModal, null, closeStructuralModal, cancelStructuralModal);
-
-    function openStructuralModal(profile) {
-        if (!profile) return;
-        modalProfileName.textContent = profile.name;
-        modalProfileWeight.textContent = `${profile.attributes['PESO_KG_M'] || 0} kg/m`;
-        modalProfileHeight.textContent = `${profile.attributes['ALTURA_d'] || 0} mm`;
-        modalProfileWidth.textContent = `${profile.attributes['ANCHURA_bf'] || 0} mm`;
-        modalProfileDimTf.textContent = `${profile.attributes['DIMENSION_tf'] || 0} mm`;
-        modalProfileDimTw.textContent = `${profile.attributes['DIMENSION_tw'] || 0} mm`;
-        modalProfileArea.textContent = `${profile.attributes['AREA_mm2'] || 0} mm²`;
+    document.addEventListener('DOMContentLoaded', function() {
         
-        modalProfileId.value = profile.id;
-        modalProfilePesoKgM.value = profile.attributes['PESO_KG_M'] || 0;
-        modalProfileNombre.value = profile.name;
+        // ==========================================
+        // 1. CONFIGURACIÓN
+        // ==========================================
+        const LARGO_COMERCIAL_ESTANDAR = 6.0; // Tira estándar de 6 metros
+    
+        // ==========================================
+        // 2. ESTADO Y REFERENCIAS DOM
+        // ==========================================
+        let structuralItems = []; 
+        let overheadItems = [];
+    
+        // Referencias DOM
+        const form = document.getElementById('cotizacionForm');
+        const profileSearchInput = document.getElementById('profile-search');
+        const autocompleteResults = document.getElementById('autocomplete-results');
         
-        modalLargoM.value = "6.0";
-        modalCantComprar.value = "1";
-        modalValorUnitario.value = "0";
-
-        structuralItemModal.style.display = 'flex';
-        setTimeout(() => {
-            structuralItemModal.classList.add('opacity-100');
-            structuralItemModal.querySelector('.transform').classList.add('scale-100');
-            modalLargoM.focus();
-        }, 50);
-    }
-
-    // --- CLIENT MANAGEMENT ---
-    saveClientButton.addEventListener('click', () => {
-        alert(`Cliente guardado (simulado). Se necesita conectar al API.`);
-        closeClientModalFn();
-    });
-
-    // --- EXPERT FLOW: AUTOCOMPLETE SEARCH ---
-    const handleAutocompleteSearch = debounce(async (event) => {
-        const term = event.target.value;
-        if (term.length < 1) {
-            autocompleteResults.style.display = 'none';
-            return;
+        // Filtros
+        const categorySelect = document.getElementById('category-select');
+        const heightSelect = document.getElementById('height-select');
+        const widthSelect = document.getElementById('width-select');
+        const weightSelect = document.getElementById('weight-select');
+        
+        // Búsqueda Guiada
+        const guidedAddButtonContainer = document.getElementById('guided-add-button-container');
+        const guidedProfileName = document.getElementById('guided-profile-name');
+        const addFromGuidedBtn = document.getElementById('add-from-guided-btn');
+        
+        // Modal
+        const structuralItemModal = document.getElementById('structuralItemModal');
+        const closeStructuralModal = document.getElementById('closeStructuralModal');
+        const cancelStructuralModal = document.getElementById('cancelStructuralModal');
+        const confirmAddStructuralItem = document.getElementById('confirmAddStructuralItem');
+        
+        // Inputs del Modal
+        const modalProfileName = document.getElementById('modalProfileName');
+        const modalLargoM = document.getElementById('modalLargoM');
+        const modalCantComprar = document.getElementById('modalCantComprar');
+        const modalValorUnitario = document.getElementById('modalValorUnitario'); 
+        const modalProfileId = document.getElementById('modalProfileId');
+        const modalProfilePesoKgM = document.getElementById('modalProfilePesoKgM');
+        const modalProfileNombre = document.getElementById('modalProfileNombre');
+        const modalSubtotalPreview = document.getElementById('modalSubtotalPreview');
+        
+        // Tablas y Totales
+        const structuralItemsTableBody = document.getElementById('structuralItemsTableBody');
+        const overheadItemsTableBody = document.getElementById('overheadItemsTableBody');
+        const addOverheadItemButton = document.getElementById('addOverheadItemButton');
+        
+        // Totales Insumos (Overhead inputs)
+        const overheadDesc = document.getElementById('overheadDesc');
+        const overheadUnidad = document.getElementById('overheadUnidad');
+        const overheadCantidad = document.getElementById('overheadCantidad');
+        const overheadValor = document.getElementById('overheadValor');
+        
+        // Spans de Totales
+        const structuralTotalValueSpan = document.getElementById('structuralTotalValue');
+        const structuralTotalWeightSpan = document.getElementById('structuralTotalWeight');
+        const overheadTotalValueSpan = document.getElementById('overheadTotalValue');
+        const grandTotalGeneralSpan = document.getElementById('grandTotalGeneral');
+        const structuralCountSpan = document.getElementById('structural-count');
+        
+        // Inputs Ocultos
+        const structuralItemsJsonInput = document.getElementById('structuralItemsJsonInput');
+        const overheadItemsJsonInput = document.getElementById('overheadItemsJsonInput');
+        const totalCostoInput = document.getElementById('totalCostoInput');
+    
+    
+        // ==========================================
+        // 3. FUNCIONES DE UTILIDAD
+        // ==========================================
+        const formatCurrency = (value) => `$ ${Math.round(value).toLocaleString('es-CL')}`;
+        const debounce = (func, delay) => {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), delay);
+            };
+        };
+    
+        // ==========================================
+        // 4. LÓGICA DEL MODAL
+        // ==========================================
+        function setupModal(modal, openBtn, closeBtn, cancelBtn) {
+            const open = () => {
+                modal.style.display = 'flex';
+                setTimeout(() => modal.classList.add('opacity-100'), 10);
+                setTimeout(() => modal.querySelector('.transform').classList.add('scale-100'), 50);
+            };
+            const close = () => {
+                modal.querySelector('.transform').classList.remove('scale-100');
+                modal.classList.remove('opacity-100');
+                setTimeout(() => modal.style.display = 'none', 300);
+            };
+            if (openBtn) openBtn.addEventListener('click', open);
+            if (closeBtn) closeBtn.addEventListener('click', close);
+            if (cancelBtn) cancelBtn.addEventListener('click', close);
+            return close;
         }
-
-        try {
-            const response = await fetch(`{% url 'profile-search' %}?term=${encodeURIComponent(term)}`);
-            const results = await response.json();
+        
+        const closeStructuralModalFn = setupModal(structuralItemModal, null, closeStructuralModal, cancelStructuralModal);
+    
+        function openStructuralModal(profile) {
+            if (!profile) return;
             
-            autocompleteResults.innerHTML = '';
-            if (results.length > 0) {
-                results.forEach(result => {
-                    const item = document.createElement('div');
-                    item.textContent = result.text;
-                    item.className = 'p-3 hover:bg-blue-100 cursor-pointer transition-colors';
-                    item.addEventListener('click', async () => {
-                        profileSearchInput.value = '';
-                        autocompleteResults.style.display = 'none';
-                        const profileResponse = await fetch(`{% url 'profile-detail' 9999 %}`.replace('9999', result.id));
-                        const profile = await profileResponse.json();
-                        openStructuralModal(profile);
-                    });
-                    autocompleteResults.appendChild(item);
-                });
-                autocompleteResults.style.display = 'block';
-            } else {
-                autocompleteResults.innerHTML = '<div class="p-3 text-center text-gray-500">No se encontraron perfiles.</div>';
-                autocompleteResults.style.display = 'block';
-            }
-        } catch (error) {
-            console.error('Error en autocompletado:', error);
-            autocompleteResults.innerHTML = '<div class="p-3 text-center text-red-500">Error al buscar.</div>';
-            autocompleteResults.style.display = 'block';
+            modalProfileName.textContent = profile.name;
+            document.getElementById('modalProfileWeight').textContent = `${profile.attributes['PESO_KG_M'] || 0} kg/m`;
+            document.getElementById('modalProfileHeight').textContent = `${profile.attributes['ALTURA_d'] || 0} mm`;
+            document.getElementById('modalProfileWidth').textContent = `${profile.attributes['ANCHURA_bf'] || 0} mm`;
+            document.getElementById('modalProfileDimTf').textContent = `${profile.attributes['DIMENSION_tf'] || 0}`;
+            document.getElementById('modalProfileDimTw').textContent = `${profile.attributes['DIMENSION_tw'] || 0}`;
+            document.getElementById('modalProfileArea').textContent = `${profile.attributes['AREA_mm2'] || 0} mm²`;
+            
+            modalProfileId.value = profile.id;
+            modalProfilePesoKgM.value = profile.attributes['PESO_KG_M'] || 0;
+            modalProfileNombre.value = profile.name;
+            
+            modalLargoM.value = "6.0";
+            modalCantComprar.value = "1";
+            modalValorUnitario.value = "0";
+            
+            updateModalPreview();
+    
+            structuralItemModal.style.display = 'flex';
+            setTimeout(() => {
+                structuralItemModal.classList.add('opacity-100');
+                structuralItemModal.querySelector('.transform').classList.add('scale-100');
+                modalLargoM.focus();
+            }, 50);
         }
-    }, 300);
-
-    // --- NOVICE FLOW: DEPENDENT FILTERS ---
-    async function populateSelect(selectElement, options, placeholder) {
-        selectElement.innerHTML = `<option value="">${placeholder}</option>`;
-        options.forEach(option => {
-            selectElement.add(new Option(option, option));
+        
+        function updateModalPreview() {
+            const cantidad = parseInt(modalCantComprar.value) || 0;
+            const valorUnitario = parseFloat(modalValorUnitario.value) || 0;
+            const largoM = parseFloat(modalLargoM.value) || 0;
+            const subtotal = (largoM * cantidad) * valorUnitario;
+            if(modalSubtotalPreview) modalSubtotalPreview.textContent = formatCurrency(subtotal);
+        }
+        
+        [modalCantComprar, modalValorUnitario, modalLargoM].forEach(input => {
+            input.addEventListener('input', updateModalPreview);
         });
-        selectElement.disabled = false;
-        selectElement.classList.remove('bg-gray-100');
-    }
-
-    function resetSelect(selectElement, placeholder) {
-        selectElement.innerHTML = `<option>${placeholder}</option>`;
-        selectElement.disabled = true;
-        selectElement.classList.add('bg-gray-100');
-    }
-
-    async function initializeFilters() {
-        try {
-            const response = await fetch(`{% url "profile-get-options" %}?field=category`);
-            const categories = await response.json();
-            populateSelect(categorySelect, categories, 'Seleccionar...');
-        } catch (error) {
-            console.error('Error inicializando filtros:', error);
-        }
-    }
-
-    async function findUniqueProfile() {
-        const category = categorySelect.value;
-        const height = heightSelect.value;
-        const width = widthSelect.value;
-        const weight = weightSelect.value;
-
-        if (!category || !height || !width || !weight) {
-            guidedAddButtonContainer.style.display = 'none';
-            return;
-        }
-
-        try {
-            const params = new URLSearchParams({
-                category: category,
-                attributes__ALTURA_d: height,
-                attributes__ANCHURA_bf: width,
-                attributes__PESO_KG_M: weight
-            });
-            const response = await fetch(`{% url "profile-find-unique" %}?${params.toString()}`);
-            const profile = await response.json();
-
-            if (profile && profile.id) {
-                guidedProfileName.textContent = profile.name;
-                addFromGuidedBtn.onclick = () => openStructuralModal(profile);
-                guidedAddButtonContainer.style.display = 'block';
-            } else {
-                guidedAddButtonContainer.style.display = 'none';
+    
+        // ==========================================
+        // 5. BÚSQUEDA Y FILTROS (Mismo código original)
+        // ==========================================
+        const handleAutocompleteSearch = debounce(async (event) => {
+            const term = event.target.value;
+            if (term.length < 1) {
+                autocompleteResults.style.display = 'none';
+                return;
             }
-        } catch (error) {
-            console.error('Error buscando perfil único:', error);
-            guidedAddButtonContainer.style.display = 'none';
+    
+            try {
+                const response = await fetch(`{% url 'profile-search' %}?term=${encodeURIComponent(term)}`);
+                const results = await response.json();
+                
+                autocompleteResults.innerHTML = '';
+                if (results.length > 0) {
+                    results.forEach(result => {
+                        const item = document.createElement('div');
+                        item.className = 'p-4 hover:bg-[#4A90E2]/10 cursor-pointer transition-all border-b border-slate-100 last:border-0 flex items-center justify-between group';
+                        item.innerHTML = `
+                            <div>
+                                <div class="font-bold text-[#002B5B]">${result.text}</div>
+                                <div class="text-xs text-slate-500 mt-1">Click para configurar</div>
+                            </div>
+                            <i class="fas fa-arrow-right text-[#4A90E2] opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                        `;
+                        item.addEventListener('click', async () => {
+                            profileSearchInput.value = '';
+                            autocompleteResults.style.display = 'none';
+                            const profileResponse = await fetch(`{% url 'profile-detail' 9999 %}`.replace('9999', result.id));
+                            const profile = await profileResponse.json();
+                            openStructuralModal(profile);
+                        });
+                        autocompleteResults.appendChild(item);
+                    });
+                    autocompleteResults.style.display = 'block';
+                } else {
+                    autocompleteResults.innerHTML = '<div class="p-4 text-center text-slate-500">No se encontraron perfiles.</div>';
+                    autocompleteResults.style.display = 'block';
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }, 300);
+    
+        async function populateSelect(selectElement, options, placeholder) {
+            selectElement.innerHTML = `<option value="">${placeholder}</option>`;
+            options.forEach(option => {
+                selectElement.add(new Option(option, option));
+            });
+            selectElement.disabled = false;
+            selectElement.classList.remove('bg-slate-100', 'text-slate-400');
+            selectElement.classList.add('bg-white', 'text-slate-700');
         }
-    }
-
-    categorySelect.addEventListener('change', async (e) => {
-        resetSelect(heightSelect, '---');
-        resetSelect(widthSelect, '---');
-        resetSelect(weightSelect, '---');
-        guidedAddButtonContainer.style.display = 'none';
-        const category = e.target.value;
-        if (!category) return;
-
-        try {
+    
+        function resetSelect(selectElement, placeholder) {
+            selectElement.innerHTML = `<option>${placeholder}</option>`;
+            selectElement.disabled = true;
+            selectElement.classList.add('bg-slate-100', 'text-slate-400');
+            selectElement.classList.remove('bg-white', 'text-slate-700');
+        }
+    
+        async function initializeFilters() {
+            try {
+                const response = await fetch(`{% url "profile-get-options" %}?field=category`);
+                const categories = await response.json();
+                populateSelect(categorySelect, categories, 'Seleccionar tipo...');
+            } catch (error) { console.error(error); }
+        }
+    
+        async function findUniqueProfile() {
+            const category = categorySelect.value;
+            const height = heightSelect.value;
+            const width = widthSelect.value;
+            const weight = weightSelect.value;
+    
+            if (!category || !height || !width || !weight) {
+                guidedAddButtonContainer.classList.add('hidden');
+                return;
+            }
+    
+            try {
+                const params = new URLSearchParams({ category, attributes__ALTURA_d: height, attributes__ANCHURA_bf: width, attributes__PESO_KG_M: weight });
+                const response = await fetch(`{% url "profile-find-unique" %}?${params.toString()}`);
+                const profile = await response.json();
+    
+                if (profile && profile.id) {
+                    guidedProfileName.textContent = profile.name;
+                    addFromGuidedBtn.onclick = () => openStructuralModal(profile);
+                    guidedAddButtonContainer.classList.remove('hidden');
+                } else {
+                    guidedAddButtonContainer.classList.add('hidden');
+                }
+            } catch (error) {
+                guidedAddButtonContainer.classList.add('hidden');
+            }
+        }
+    
+        categorySelect.addEventListener('change', async (e) => {
+            resetSelect(heightSelect, 'Cargando...'); resetSelect(widthSelect, '...'); resetSelect(weightSelect, '...');
+            const category = e.target.value;
+            if (!category) return;
             const response = await fetch(`/api/profiles/get-options/?field=attributes__ALTURA_d&category=${category}`);
-            const heights = await response.json();
-            populateSelect(heightSelect, heights, 'Seleccionar Altura');
-        } catch (error) {
-            console.error('Error cargando alturas:', error);
-        }
-    });
-
-    heightSelect.addEventListener('change', async (e) => {
-        resetSelect(widthSelect, '---');
-        resetSelect(weightSelect, '---');
-        guidedAddButtonContainer.style.display = 'none';
-        const height = e.target.value;
-        const category = categorySelect.value;
-        if (!height) return;
-
-        try {
-            const params = new URLSearchParams({ 
-                field: 'attributes__ANCHURA_bf', 
-                category: category, 
-                attributes__ALTURA_d: height 
-            });
+            populateSelect(heightSelect, await response.json(), 'Seleccionar altura...');
+        });
+    
+        heightSelect.addEventListener('change', async (e) => {
+            resetSelect(widthSelect, 'Cargando...'); resetSelect(weightSelect, '...');
+            const height = e.target.value;
+            const category = categorySelect.value;
+            if (!height) return;
+            const params = new URLSearchParams({ field: 'attributes__ANCHURA_bf', category, attributes__ALTURA_d: height });
             const response = await fetch(`/api/profiles/get-options/?${params.toString()}`);
-            const widths = await response.json();
-            populateSelect(widthSelect, widths, 'Seleccionar Ancho');
-        } catch (error) {
-            console.error('Error cargando anchos:', error);
-        }
-    });
-
-    widthSelect.addEventListener('change', async (e) => {
-        resetSelect(weightSelect, '---');
-        guidedAddButtonContainer.style.display = 'none';
-        const width = e.target.value;
-        const category = categorySelect.value;
-        const height = heightSelect.value;
-        if (!width) return;
-
-        try {
-            const params = new URLSearchParams({
-                field: 'attributes__PESO_KG_M',
-                category: category,
-                attributes__ALTURA_d: height,
-                attributes__ANCHURA_bf: width
-            });
+            populateSelect(widthSelect, await response.json(), 'Seleccionar ancho...');
+        });
+    
+        widthSelect.addEventListener('change', async (e) => {
+            resetSelect(weightSelect, 'Cargando...');
+            const width = e.target.value;
+            const category = categorySelect.value;
+            const height = heightSelect.value;
+            if (!width) return;
+            const params = new URLSearchParams({ field: 'attributes__PESO_KG_M', category, attributes__ALTURA_d: height, attributes__ANCHURA_bf: width });
             const response = await fetch(`/api/profiles/get-options/?${params.toString()}`);
-            const weights = await response.json();
-            populateSelect(weightSelect, weights, 'Seleccionar Peso');
-        } catch (error) {
-            console.error('Error cargando pesos:', error);
+            populateSelect(weightSelect, await response.json(), 'Seleccionar peso...');
+        });
+    
+        weightSelect.addEventListener('change', findUniqueProfile);
+    
+    
+        // ==========================================
+        // 6. GESTIÓN DE ITEMS Y CÁLCULO (LOGICA EXCEL)
+        // ==========================================
+    
+        function addStructuralItem() {
+            const largoM = parseFloat(modalLargoM.value) || 0;
+            const cant = parseInt(modalCantComprar.value) || 1;
+            
+            // Crear objeto crudo (lo que pide el usuario)
+            const newItem = {
+                profile_id: modalProfileId.value,
+                material_nombre: modalProfileNombre.value,
+                largo_m: largoM,
+                cantidad_piezas: cant,
+                valor_unitario_m: parseFloat(modalValorUnitario.value) || 0,
+                peso_kg_m: parseFloat(modalProfilePesoKgM.value) || 0,
+            };
+            
+            structuralItems.push(newItem);
+            renderAndCalculateExcelsLogic(); // <-- Llamada a la nueva función
+            closeStructuralModalFn();
         }
-    });
-
-    weightSelect.addEventListener('change', findUniqueProfile);
-
-    // --- ITEM ADD/REMOVE LOGIC ---
-    function addStructuralItem() {
-        const largoM = parseFloat(modalLargoM.value) || 0;
-        const newItem = {
-            profile_id: modalProfileId.value,
-            material_nombre: modalProfileNombre.value,
-            largo_m: largoM,
-            largo_mm: largoM * 1000,
-            unidad_comercial: 6,
-            cant_necesaria: 1,
-            cant_a_comprar: parseInt(modalCantComprar.value) || 1,
-            valor_unitario: parseFloat(modalValorUnitario.value) || 0,
-            peso_kg_m: parseFloat(modalProfilePesoKgM.value) || 0,
+    
+        function addOverheadItem() {
+            const descripcion = overheadDesc.value.trim();
+            if (!descripcion) { alert("Falta descripción"); return; }
+            
+            overheadItems.push({
+                descripcion,
+                unidad: overheadUnidad.value.trim() || 'Unidad',
+                cantidad: parseFloat(overheadCantidad.value) || 1,
+                valor_unitario: parseFloat(overheadValor.value) || 0,
+            });
+            renderAndCalculateExcelsLogic();
+            
+            overheadDesc.value = ''; overheadUnidad.value = ''; overheadCantidad.value = '1'; overheadValor.value = '0';
+        }
+    
+        window.removeItem = function(type, index) {
+            if (!confirm("¿Eliminar ítem?")) return;
+            if (type === 'overhead') {
+                overheadItems.splice(index, 1);
+                renderAndCalculateExcelsLogic();
+            }
+        }
+        
+        // Función global para eliminar perfil completo
+        window.eliminarGrupo = function(profileId) {
+            if(!confirm("¿Eliminar todos los cortes de este perfil?")) return;
+            structuralItems = structuralItems.filter(item => item.profile_id !== profileId);
+            renderAndCalculateExcelsLogic();
         };
-        structuralItems.push(newItem);
-        renderAndCalculate();
-        closeStructuralModalFn();
-    }
-
-    function addOverheadItem() {
-        const descripcion = overheadDesc.value.trim();
-        if (!descripcion) {
-            alert("La descripción del insumo es obligatoria.");
-            overheadDesc.focus();
-            return;
+    
+        // --- FUNCIÓN PRINCIPAL NUEVA (LAS 9 COLUMNAS) ---
+        function renderAndCalculateExcelsLogic() {
+            
+            // 1. Agrupar
+            const grupos = {};
+            structuralItems.forEach(item => {
+                if (!grupos[item.profile_id]) {
+                    grupos[item.profile_id] = {
+                        id: item.profile_id,
+                        nombre: item.material_nombre,
+                        peso_kg_m: item.peso_kg_m,
+                        valor_unitario_m: item.valor_unitario_m,
+                        total_metros: 0,
+                        cortes_detalle: []
+                    };
+                }
+                grupos[item.profile_id].total_metros += (item.largo_m * item.cantidad_piezas);
+                if (item.valor_unitario_m > 0) grupos[item.profile_id].valor_unitario_m = item.valor_unitario_m;
+                grupos[item.profile_id].cortes_detalle.push(`${item.cantidad_piezas}x${item.largo_m}m`);
+            });
+    
+            // 2. Calcular y Renderizar
+            let htmlRows = '';
+            let totalStructuralCost = 0;
+            let totalWeightGlobal = 0;
+            let itemsParaGuardarEnBD = []; 
+    
+            for (const pid in grupos) {
+                const grupo = grupos[pid];
+                
+                // --- CÁLCULOS TIPO EXCEL ---
+                const metrosTotales = grupo.total_metros;
+                const unidadComercialCalculada = metrosTotales / LARGO_COMERCIAL_ESTANDAR; // División pura
+                const cantNecesaria = Math.ceil(unidadComercialCalculada); // Redondeo arriba
+                const cantAComprar = Math.ceil(cantNecesaria * 1.25); // +25% Seguridad
+                
+                // Precios y Pesos (Basado en tiras de 6m)
+                const precioPorBarra6m = grupo.valor_unitario_m * LARGO_COMERCIAL_ESTANDAR;
+                const costoTotalGrupo = cantAComprar * precioPorBarra6m;
+                const pesoTotalGrupo = cantAComprar * LARGO_COMERCIAL_ESTANDAR * grupo.peso_kg_m;
+    
+                totalStructuralCost += costoTotalGrupo;
+                totalWeightGlobal += pesoTotalGrupo;
+    
+                // Datos para BD
+                itemsParaGuardarEnBD.push({
+                    material_nombre: grupo.nombre,
+                    largo_mm: 6000, largo_m: 6.0, unidad_comercial: 6.0, 
+                    cant_necesaria: cantNecesaria, cant_a_comprar: cantAComprar,
+                    valor_unitario: precioPorBarra6m, peso_kg_m: grupo.peso_kg_m
+                });
+    
+                // --- HTML (9 COLUMNAS) ---
+                htmlRows += `
+                    <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 text-sm group">
+                        <td class="px-3 py-4 font-bold text-[#002B5B]">
+                            ${grupo.nombre}
+                            <div class="text-[10px] text-slate-400 font-normal truncate max-w-[120px]" title="${grupo.cortes_detalle.join(', ')}">
+                               ${grupo.cortes_detalle.join(', ')}
+                            </div>
+                        </td>
+                        <td class="px-3 py-4 text-center text-slate-700 font-medium">${metrosTotales.toFixed(2)} m</td>
+                        <td class="px-3 py-4 text-center text-slate-500">${unidadComercialCalculada.toFixed(2)}</td>
+                        <td class="px-3 py-4 text-center font-bold text-blue-600">${cantNecesaria}</td>
+                        <td class="px-3 py-4 text-center">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 font-bold rounded border border-green-200 shadow-sm">${cantAComprar}</span>
+                        </td>
+                        <td class="px-3 py-4 text-right text-slate-500 text-xs">${grupo.peso_kg_m.toFixed(2)}</td>
+                        <td class="px-3 py-4 text-right font-medium text-slate-700">${pesoTotalGrupo.toFixed(1)} kg</td>
+                        <td class="px-3 py-4 text-right text-slate-500">$ ${Math.round(precioPorBarra6m).toLocaleString('es-CL')}</td>
+                        <td class="px-3 py-4 text-right font-bold text-[#002B5B]">$ ${Math.round(costoTotalGrupo).toLocaleString('es-CL')}</td>
+                        <td class="px-3 py-4 text-center">
+                            <button onclick="eliminarGrupo('${grupo.id}')" class="text-slate-300 hover:text-red-500 transition-colors">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
+    
+            // Renderizar Tabla Estructural
+            structuralItemsTableBody.innerHTML = (htmlRows === '') ? 
+                '<tr><td colspan="10" class="px-6 py-16 text-center text-slate-400 bg-slate-50/50">No hay materiales agregados</td></tr>' : htmlRows;
+    
+            // Renderizar Insumos (Overhead)
+            overheadItemsTableBody.innerHTML = overheadItems.map((item, index) => `
+                <tr class="hover:bg-slate-50 border-b border-slate-100">
+                    <td class="px-4 py-3 font-medium text-[#002B5B]">${item.descripcion}</td>
+                    <td class="px-3 py-3 text-center text-slate-600">${item.unidad}</td>
+                    <td class="px-3 py-3 text-center font-bold">${item.cantidad}</td>
+                    <td class="px-3 py-3 text-right font-bold text-red-600">${formatCurrency(item.valor_unitario)}</td>
+                    <td class="px-4 py-3 text-right font-bold text-[#002B5B] text-lg">${formatCurrency(item.cantidad * item.valor_unitario)}</td>
+                    <td class="px-3 py-3 text-center">
+                        <button onclick="removeItem('overhead', ${index})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash-alt"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+    
+            // Calcular Totales Generales
+            const overheadTotalVal = overheadItems.reduce((sum, item) => sum + (item.cantidad * item.valor_unitario), 0);
+            const grandTotal = totalStructuralCost + overheadTotalVal;
+    
+            // Actualizar UI Totales
+            structuralTotalValueSpan.textContent = formatCurrency(totalStructuralCost);
+            structuralTotalWeightSpan.textContent = `${totalWeightGlobal.toFixed(2)} kg`;
+            overheadTotalValueSpan.textContent = formatCurrency(overheadTotalVal);
+            grandTotalGeneralSpan.textContent = formatCurrency(grandTotal);
+            structuralCountSpan.textContent = `${itemsParaGuardarEnBD.length}`; // Cantidad de items (tipos de perfil)
+    
+            // Actualizar Inputs Ocultos (Para Django)
+            structuralItemsJsonInput.value = JSON.stringify(itemsParaGuardarEnBD);
+            overheadItemsJsonInput.value = JSON.stringify(overheadItems);
+            totalCostoInput.value = grandTotal;
         }
-        const newItem = {
-            descripcion,
-            unidad: overheadUnidad.value.trim() || 'Unidad',
-            cantidad: parseFloat(overheadCantidad.value) || 1,
-            valor_unitario: parseFloat(overheadValor.value) || 0,
-        };
-        overheadItems.push(newItem);
-        renderAndCalculate();
-        overheadDesc.value = '';
-        overheadUnidad.value = '';
-        overheadCantidad.value = '1';
-        overheadValor.value = '0';
-        overheadDesc.focus();
-    }
-
-    window.removeItem = function(type, index) {
-        if (!confirm("¿Está seguro de que desea eliminar este ítem?")) return;
-        if (type === 'structural') structuralItems.splice(index, 1);
-        else overheadItems.splice(index, 1);
-        renderAndCalculate();
-    }
-
-    // --- RENDER & CALCULATION ---
-    function renderAndCalculate() {
-        // Render structural items
-        structuralItemsTableBody.innerHTML = structuralItems.map((item, index) => {
-            const pesoTotal = item.cant_a_comprar * item.largo_m * item.peso_kg_m;
-            const subtotal = item.cant_a_comprar * item.valor_unitario;
-            return `
-                <tr class="hover:bg-blue-50/50">
-                    <td class="px-4 py-2 font-medium text-gray-900">${item.material_nombre}</td>
-                    <td class="px-3 py-2 text-center text-gray-700">${item.largo_m.toFixed(2)}</td>
-                    <td class="px-3 py-2 text-center font-bold text-gray-800">${item.cant_a_comprar}</td>
-                    <td class="px-3 py-2 text-right font-semibold text-red-600">${formatCurrency(item.valor_unitario)}</td>
-                    <td class="px-3 py-2 text-right text-gray-700">${formatWeight(pesoTotal)}</td>
-                    <td class="px-4 py-2 text-right font-bold text-gray-900">${formatCurrency(subtotal)}</td>
-                    <td class="px-3 py-2 text-center"><button type="button" onclick="removeItem('structural', ${index})" class="text-red-500 hover:text-red-800 p-1"><i class="fas fa-trash-alt"></i></button></td>
-                </tr>`;
-        }).join('');
-
-        // Render overhead items
-        overheadItemsTableBody.innerHTML = overheadItems.map((item, index) => {
-            const subtotal = item.cantidad * item.valor_unitario;
-            return `
-                <tr class="hover:bg-indigo-50/50">
-                    <td class="px-4 py-2 font-medium text-gray-900">${item.descripcion}</td>
-                    <td class="px-3 py-2 text-center text-gray-700">${item.unidad}</td>
-                    <td class="px-3 py-2 text-center font-bold text-gray-800">${item.cantidad}</td>
-                    <td class="px-3 py-2 text-right font-semibold text-red-600">${formatCurrency(item.valor_unitario)}</td>
-                    <td class="px-4 py-2 text-right font-bold text-gray-900">${formatCurrency(subtotal)}</td>
-                    <td class="px-3 py-2 text-center"><button type="button" onclick="removeItem('overhead', ${index})" class="text-red-500 hover:text-red-800 p-1"><i class="fas fa-trash-alt"></i></button></td>
-                </tr>`;
-        }).join('');
-
-        // Calculate totals
-        const structuralTotalVal = structuralItems.reduce((sum, item) => sum + (item.cant_a_comprar * item.valor_unitario), 0);
-        const structuralTotalWgt = structuralItems.reduce((sum, item) => sum + (item.cant_a_comprar * item.largo_m * item.peso_kg_m), 0);
-        const overheadTotalVal = overheadItems.reduce((sum, item) => sum + (item.cantidad * item.valor_unitario), 0);
-        const grandTotal = structuralTotalVal + overheadTotalVal;
-
-        // Update UI
-        structuralTotalValueSpan.textContent = formatCurrency(structuralTotalVal);
-        structuralTotalWeightSpan.textContent = formatWeight(structuralTotalWgt);
-        overheadTotalValueSpan.textContent = formatCurrency(overheadTotalVal);
-        grandTotalGeneralSpan.textContent = formatCurrency(grandTotal);
-
-        // Update hidden inputs
-        structuralItemsJsonInput.value = JSON.stringify(structuralItems);
-        overheadItemsJsonInput.value = JSON.stringify(overheadItems);
-        totalCostoInput.value = grandTotal;
-    }
-
-    // --- EVENT LISTENERS & INITIALIZATION ---
-    profileSearchInput.addEventListener('input', handleAutocompleteSearch);
-    document.addEventListener('click', (e) => {
-        if (!profileSearchInput.contains(e.target)) autocompleteResults.style.display = 'none';
+    
+        // --- LISTENERS ---
+        profileSearchInput.addEventListener('input', handleAutocompleteSearch);
+        document.addEventListener('click', (e) => { if (!profileSearchInput.contains(e.target)) autocompleteResults.style.display = 'none'; });
+        confirmAddStructuralItem.addEventListener('click', addStructuralItem);
+        addOverheadItemButton.addEventListener('click', addOverheadItem);
+        form.addEventListener('submit', (e) => {
+            if (structuralItems.length === 0 && overheadItems.length === 0) {
+                e.preventDefault(); alert("Agregue al menos un ítem.");
+            }
+        });
+    
+        // START
+        initializeFilters();
+        renderAndCalculateExcelsLogic(); // Inicia vacio
     });
-    confirmAddStructuralItem.addEventListener('click', addStructuralItem);
-    addOverheadItemButton.addEventListener('click', addOverheadItem);
-    form.addEventListener('submit', (e) => {
-        if (structuralItems.length === 0 && overheadItems.length === 0) {
-            e.preventDefault();
-            alert("Debe agregar al menos un material o un insumo para guardar la cotización.");
-        }
-    });
-
-    fetchClients();
-    initializeFilters();
-    renderAndCalculate();
-});
 </script>
 {% endblock %}
