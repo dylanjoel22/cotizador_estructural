@@ -295,15 +295,19 @@
                     <div class="overflow-x-auto">
                         <table class="w-full text-left">
                             <thead>
-                                <tr class="text-xs text-slate-600 font-bold uppercase tracking-wider border-b-2 border-slate-200 bg-slate-50">
-                                    <th class="px-6 py-4">Material</th>
-                                    <th class="px-6 py-4 text-center">Largo (m)</th>
-                                    <th class="px-6 py-4 text-center">Cantidad</th>
-                                    <th class="px-6 py-4 text-right">P. Unitario</th>
-                                    <th class="px-6 py-4 text-right">Peso Total</th>
-                                    <th class="px-6 py-4 text-right">Subtotal</th>
-                                    <th class="px-6 py-4"></th>
-                                </tr>
+                                <thead>
+                                    <tr class="text-xs text-slate-600 font-bold uppercase tracking-wider border-b-2 border-slate-200 bg-slate-50">
+                                        <th class="px-3 py-4 text-left">Material</th>
+                                        <th class="px-3 py-4 text-center">Largo (M)</th> <th class="px-3 py-4 text-center">U. Comercial</th>
+                                        <th class="px-3 py-4 text-center">C. Necesaria</th>
+                                        <th class="px-3 py-4 text-center">A Comprar</th>
+                                        <th class="px-3 py-4 text-right">Peso (Kg/m)</th>
+                                        <th class="px-3 py-4 text-right">Peso Total</th>
+                                        <th class="px-3 py-4 text-right">Valor Unit.</th>
+                                        <th class="px-3 py-4 text-right">Valor Total</th>
+                                        <th class="px-3 py-4"></th>
+                                    </tr>
+                                </thead>
                             </thead>
                             <tbody id="structuralItemsTableBody" class="text-sm divide-y divide-slate-100">
                                 <tr id="empty-state-row">
@@ -477,576 +481,462 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // ==========================================
+        // 1. CONFIGURACIÓN
+        // ==========================================
+        const LARGO_COMERCIAL_ESTANDAR = 6.0; // Tira estándar de 6 metros
     
-    // ==========================================
-    // 1. CONFIGURACIÓN DE INGENIERÍA
-    // ==========================================
-    const LARGO_COMERCIAL_ESTANDAR = 6; // La tira que vende la ferretería (6 metros)
-
-    // --- ALGORITMO DE OPTIMIZACIÓN DE CORTES (Bin Packing) ---
-    // Esta función es el cerebro matemático de tu proyecto
-    function calcularCortesOptimos(cortesNecesarios, largoBarra) {
-        // Ordenamos de mayor a menor para optimizar el llenado (Estrategia Best Fit)
-        let piezas = [...cortesNecesarios].sort((a, b) => b - a);
-        let barras = []; // Aquí guardaremos las tiras comerciales virtuales
-
-        for (let pieza of piezas) {
-            let cortada = false;
+        // ==========================================
+        // 2. ESTADO Y REFERENCIAS DOM
+        // ==========================================
+        let structuralItems = []; 
+        let overheadItems = [];
+    
+        // Referencias DOM
+        const form = document.getElementById('cotizacionForm');
+        const profileSearchInput = document.getElementById('profile-search');
+        const autocompleteResults = document.getElementById('autocomplete-results');
+        
+        // Filtros
+        const categorySelect = document.getElementById('category-select');
+        const heightSelect = document.getElementById('height-select');
+        const widthSelect = document.getElementById('width-select');
+        const weightSelect = document.getElementById('weight-select');
+        
+        // Búsqueda Guiada
+        const guidedAddButtonContainer = document.getElementById('guided-add-button-container');
+        const guidedProfileName = document.getElementById('guided-profile-name');
+        const addFromGuidedBtn = document.getElementById('add-from-guided-btn');
+        
+        // Modal
+        const structuralItemModal = document.getElementById('structuralItemModal');
+        const closeStructuralModal = document.getElementById('closeStructuralModal');
+        const cancelStructuralModal = document.getElementById('cancelStructuralModal');
+        const confirmAddStructuralItem = document.getElementById('confirmAddStructuralItem');
+        
+        // Inputs del Modal
+        const modalProfileName = document.getElementById('modalProfileName');
+        const modalLargoM = document.getElementById('modalLargoM');
+        const modalCantComprar = document.getElementById('modalCantComprar');
+        const modalValorUnitario = document.getElementById('modalValorUnitario'); 
+        const modalProfileId = document.getElementById('modalProfileId');
+        const modalProfilePesoKgM = document.getElementById('modalProfilePesoKgM');
+        const modalProfileNombre = document.getElementById('modalProfileNombre');
+        const modalSubtotalPreview = document.getElementById('modalSubtotalPreview');
+        
+        // Tablas y Totales
+        const structuralItemsTableBody = document.getElementById('structuralItemsTableBody');
+        const overheadItemsTableBody = document.getElementById('overheadItemsTableBody');
+        const addOverheadItemButton = document.getElementById('addOverheadItemButton');
+        
+        // Totales Insumos (Overhead inputs)
+        const overheadDesc = document.getElementById('overheadDesc');
+        const overheadUnidad = document.getElementById('overheadUnidad');
+        const overheadCantidad = document.getElementById('overheadCantidad');
+        const overheadValor = document.getElementById('overheadValor');
+        
+        // Spans de Totales
+        const structuralTotalValueSpan = document.getElementById('structuralTotalValue');
+        const structuralTotalWeightSpan = document.getElementById('structuralTotalWeight');
+        const overheadTotalValueSpan = document.getElementById('overheadTotalValue');
+        const grandTotalGeneralSpan = document.getElementById('grandTotalGeneral');
+        const structuralCountSpan = document.getElementById('structural-count');
+        
+        // Inputs Ocultos
+        const structuralItemsJsonInput = document.getElementById('structuralItemsJsonInput');
+        const overheadItemsJsonInput = document.getElementById('overheadItemsJsonInput');
+        const totalCostoInput = document.getElementById('totalCostoInput');
+    
+    
+        // ==========================================
+        // 3. FUNCIONES DE UTILIDAD
+        // ==========================================
+        const formatCurrency = (value) => `$ ${Math.round(value).toLocaleString('es-CL')}`;
+        const debounce = (func, delay) => {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), delay);
+            };
+        };
+    
+        // ==========================================
+        // 4. LÓGICA DEL MODAL
+        // ==========================================
+        function setupModal(modal, openBtn, closeBtn, cancelBtn) {
+            const open = () => {
+                modal.style.display = 'flex';
+                setTimeout(() => modal.classList.add('opacity-100'), 10);
+                setTimeout(() => modal.querySelector('.transform').classList.add('scale-100'), 50);
+            };
+            const close = () => {
+                modal.querySelector('.transform').classList.remove('scale-100');
+                modal.classList.remove('opacity-100');
+                setTimeout(() => modal.style.display = 'none', 300);
+            };
+            if (openBtn) openBtn.addEventListener('click', open);
+            if (closeBtn) closeBtn.addEventListener('click', close);
+            if (cancelBtn) cancelBtn.addEventListener('click', close);
+            return close;
+        }
+        
+        const closeStructuralModalFn = setupModal(structuralItemModal, null, closeStructuralModal, cancelStructuralModal);
+    
+        function openStructuralModal(profile) {
+            if (!profile) return;
             
-            // Buscamos si cabe en alguna barra ya empezada
-            for (let barra of barras) {
-                // Usamos matemáticas cuidadosas para evitar errores tipo 0.1 + 0.2 = 0.3000004
-                const espacioRestante = Math.round((barra.espacioLibre - pieza) * 100) / 100;
-                
-                if (espacioRestante >= 0) {
-                    barra.cortes.push(pieza);
-                    barra.espacioLibre = espacioRestante;
-                    cortada = true;
-                    break;
-                }
-            }
-
-            // Si no cabe, compramos una barra nueva
-            if (!cortada) {
-                barras.push({
-                    espacioLibre: Math.round((largoBarra - pieza) * 100) / 100,
-                    cortes: [pieza]
-                });
-            }
-        }
-
-        return {
-            cantidadBarras: barras.length,
-            metrosComprados: barras.length * largoBarra,
-            desperdicioTotal: barras.reduce((acc, b) => acc + b.espacioLibre, 0),
-            detalle: barras
-        };
-    }
-
-    // ==========================================
-    // 2. ESTADO Y REFERENCIAS DOM
-    // ==========================================
-    let structuralItems = []; // Aquí guardamos los pedidos individuales
-    let overheadItems = [];
-
-    // Referencias DOM (Mantenemos las originales que funcionan)
-    const form = document.getElementById('cotizacionForm');
-    const profileSearchInput = document.getElementById('profile-search');
-    const autocompleteResults = document.getElementById('autocomplete-results');
-    
-    // Filtros
-    const categorySelect = document.getElementById('category-select');
-    const heightSelect = document.getElementById('height-select');
-    const widthSelect = document.getElementById('width-select');
-    const weightSelect = document.getElementById('weight-select');
-    
-    // Búsqueda Guiada
-    const guidedAddButtonContainer = document.getElementById('guided-add-button-container');
-    const guidedProfileName = document.getElementById('guided-profile-name');
-    const addFromGuidedBtn = document.getElementById('add-from-guided-btn');
-    
-    // Modal
-    const structuralItemModal = document.getElementById('structuralItemModal');
-    const closeStructuralModal = document.getElementById('closeStructuralModal');
-    const cancelStructuralModal = document.getElementById('cancelStructuralModal');
-    const confirmAddStructuralItem = document.getElementById('confirmAddStructuralItem');
-    
-    // Inputs del Modal
-    const modalProfileName = document.getElementById('modalProfileName');
-    const modalLargoM = document.getElementById('modalLargoM');
-    const modalCantComprar = document.getElementById('modalCantComprar');
-    const modalValorUnitario = document.getElementById('modalValorUnitario'); // Precio POR METRO LINEAL
-    const modalProfileId = document.getElementById('modalProfileId');
-    const modalProfilePesoKgM = document.getElementById('modalProfilePesoKgM');
-    const modalProfileNombre = document.getElementById('modalProfileNombre');
-    const modalSubtotalPreview = document.getElementById('modalSubtotalPreview');
-    
-    // Tablas y Totales
-    const structuralItemsTableBody = document.getElementById('structuralItemsTableBody');
-    const overheadItemsTableBody = document.getElementById('overheadItemsTableBody');
-    const addOverheadItemButton = document.getElementById('addOverheadItemButton');
-    
-    // Totales Insumos (Overhead inputs)
-    const overheadDesc = document.getElementById('overheadDesc');
-    const overheadUnidad = document.getElementById('overheadUnidad');
-    const overheadCantidad = document.getElementById('overheadCantidad');
-    const overheadValor = document.getElementById('overheadValor');
-    
-    // Spans de Totales
-    const structuralTotalValueSpan = document.getElementById('structuralTotalValue');
-    const structuralTotalWeightSpan = document.getElementById('structuralTotalWeight');
-    const overheadTotalValueSpan = document.getElementById('overheadTotalValue');
-    const grandTotalGeneralSpan = document.getElementById('grandTotalGeneral');
-    const structuralCountSpan = document.getElementById('structural-count');
-    
-    // Inputs Ocultos
-    const structuralItemsJsonInput = document.getElementById('structuralItemsJsonInput');
-    const overheadItemsJsonInput = document.getElementById('overheadItemsJsonInput');
-    const totalCostoInput = document.getElementById('totalCostoInput');
-
-
-    // ==========================================
-    // 3. FUNCIONES DE UTILIDAD
-    // ==========================================
-    const formatCurrency = (value) => `$ ${Math.round(value).toLocaleString('es-CL')}`;
-    const formatWeight = (value) => `${value.toFixed(2)} kg`;
-    const debounce = (func, delay) => {
-        let timeout;
-        return function(...args) {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(this, args), delay);
-        };
-    };
-
-    // ==========================================
-    // 4. LÓGICA DEL MODAL
-    // ==========================================
-    function setupModal(modal, openBtn, closeBtn, cancelBtn) {
-        const open = () => {
-            modal.style.display = 'flex';
-            setTimeout(() => modal.classList.add('opacity-100'), 10);
-            setTimeout(() => modal.querySelector('.transform').classList.add('scale-100'), 50);
-        };
-        const close = () => {
-            modal.querySelector('.transform').classList.remove('scale-100');
-            modal.classList.remove('opacity-100');
-            setTimeout(() => modal.style.display = 'none', 300);
-        };
-        if (openBtn) openBtn.addEventListener('click', open);
-        if (closeBtn) closeBtn.addEventListener('click', close);
-        if (cancelBtn) cancelBtn.addEventListener('click', close);
-        return close;
-    }
-    
-    const closeStructuralModalFn = setupModal(structuralItemModal, null, closeStructuralModal, cancelStructuralModal);
-
-    // Función para abrir modal y rellenar datos técnicos
-    function openStructuralModal(profile) {
-        if (!profile) return;
-        
-        // Rellenar datos visuales
-        modalProfileName.textContent = profile.name;
-        document.getElementById('modalProfileWeight').textContent = `${profile.attributes['PESO_KG_M'] || 0} kg/m`;
-        document.getElementById('modalProfileHeight').textContent = `${profile.attributes['ALTURA_d'] || 0} mm`;
-        document.getElementById('modalProfileWidth').textContent = `${profile.attributes['ANCHURA_bf'] || 0} mm`;
-        document.getElementById('modalProfileDimTf').textContent = `${profile.attributes['DIMENSION_tf'] || 0}`;
-        document.getElementById('modalProfileDimTw').textContent = `${profile.attributes['DIMENSION_tw'] || 0}`;
-        document.getElementById('modalProfileArea').textContent = `${profile.attributes['AREA_mm2'] || 0} mm²`;
-        
-        // Rellenar inputs ocultos y editables
-        modalProfileId.value = profile.id;
-        modalProfilePesoKgM.value = profile.attributes['PESO_KG_M'] || 0;
-        modalProfileNombre.value = profile.name;
-        
-        modalLargoM.value = "6.0";
-        modalCantComprar.value = "1";
-        modalValorUnitario.value = "0";
-        
-        updateModalPreview();
-
-        structuralItemModal.style.display = 'flex';
-        setTimeout(() => {
-            structuralItemModal.classList.add('opacity-100');
-            structuralItemModal.querySelector('.transform').classList.add('scale-100');
-            modalLargoM.focus();
-        }, 50);
-    }
-    
-    function updateModalPreview() {
-        const cantidad = parseInt(modalCantComprar.value) || 0;
-        const valorUnitario = parseFloat(modalValorUnitario.value) || 0; // Precio por metro
-        const largoM = parseFloat(modalLargoM.value) || 0;
-        
-        // El subtotal en el modal es estimativo: Largo * Cantidad * Precio/Metro
-        const subtotal = (largoM * cantidad) * valorUnitario;
-        if(modalSubtotalPreview) modalSubtotalPreview.textContent = formatCurrency(subtotal);
-    }
-    
-    [modalCantComprar, modalValorUnitario, modalLargoM].forEach(input => {
-        input.addEventListener('input', updateModalPreview);
-    });
-
-
-    // ==========================================
-    // 5. BÚSQUEDA Y FILTROS (Original Restaurado)
-    // ==========================================
-    const handleAutocompleteSearch = debounce(async (event) => {
-        const term = event.target.value;
-        if (term.length < 1) {
-            autocompleteResults.style.display = 'none';
-            return;
-        }
-
-        try {
-            const response = await fetch(`{% url 'profile-search' %}?term=${encodeURIComponent(term)}`);
-            const results = await response.json();
+            modalProfileName.textContent = profile.name;
+            document.getElementById('modalProfileWeight').textContent = `${profile.attributes['PESO_KG_M'] || 0} kg/m`;
+            document.getElementById('modalProfileHeight').textContent = `${profile.attributes['ALTURA_d'] || 0} mm`;
+            document.getElementById('modalProfileWidth').textContent = `${profile.attributes['ANCHURA_bf'] || 0} mm`;
+            document.getElementById('modalProfileDimTf').textContent = `${profile.attributes['DIMENSION_tf'] || 0}`;
+            document.getElementById('modalProfileDimTw').textContent = `${profile.attributes['DIMENSION_tw'] || 0}`;
+            document.getElementById('modalProfileArea').textContent = `${profile.attributes['AREA_mm2'] || 0} mm²`;
             
-            autocompleteResults.innerHTML = '';
-            if (results.length > 0) {
-                results.forEach(result => {
-                    const item = document.createElement('div');
-                    item.className = 'p-4 hover:bg-[#4A90E2]/10 cursor-pointer transition-all border-b border-slate-100 last:border-0 flex items-center justify-between group';
-                    item.innerHTML = `
-                        <div>
-                            <div class="font-bold text-[#002B5B]">${result.text}</div>
-                            <div class="text-xs text-slate-500 mt-1">Click para configurar</div>
-                        </div>
-                        <i class="fas fa-arrow-right text-[#4A90E2] opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                    `;
-                    item.addEventListener('click', async () => {
-                        profileSearchInput.value = '';
-                        autocompleteResults.style.display = 'none';
-                        const profileResponse = await fetch(`{% url 'profile-detail' 9999 %}`.replace('9999', result.id));
-                        const profile = await profileResponse.json();
-                        openStructuralModal(profile);
-                    });
-                    autocompleteResults.appendChild(item);
-                });
-                autocompleteResults.style.display = 'block';
-            } else {
-                autocompleteResults.innerHTML = '<div class="p-4 text-center text-slate-500">No se encontraron perfiles.</div>';
-                autocompleteResults.style.display = 'block';
-            }
-        } catch (error) {
-            console.error(error);
+            modalProfileId.value = profile.id;
+            modalProfilePesoKgM.value = profile.attributes['PESO_KG_M'] || 0;
+            modalProfileNombre.value = profile.name;
+            
+            modalLargoM.value = "6.0";
+            modalCantComprar.value = "1";
+            modalValorUnitario.value = "0";
+            
+            updateModalPreview();
+    
+            structuralItemModal.style.display = 'flex';
+            setTimeout(() => {
+                structuralItemModal.classList.add('opacity-100');
+                structuralItemModal.querySelector('.transform').classList.add('scale-100');
+                modalLargoM.focus();
+            }, 50);
         }
-    }, 300);
-
-    // Helpers para filtros
-    async function populateSelect(selectElement, options, placeholder) {
-        selectElement.innerHTML = `<option value="">${placeholder}</option>`;
-        options.forEach(option => {
-            selectElement.add(new Option(option, option));
+        
+        function updateModalPreview() {
+            const cantidad = parseInt(modalCantComprar.value) || 0;
+            const valorUnitario = parseFloat(modalValorUnitario.value) || 0;
+            const largoM = parseFloat(modalLargoM.value) || 0;
+            const subtotal = (largoM * cantidad) * valorUnitario;
+            if(modalSubtotalPreview) modalSubtotalPreview.textContent = formatCurrency(subtotal);
+        }
+        
+        [modalCantComprar, modalValorUnitario, modalLargoM].forEach(input => {
+            input.addEventListener('input', updateModalPreview);
         });
-        selectElement.disabled = false;
-        selectElement.classList.remove('bg-slate-100', 'text-slate-400');
-        selectElement.classList.add('bg-white', 'text-slate-700');
-    }
-
-    function resetSelect(selectElement, placeholder) {
-        selectElement.innerHTML = `<option>${placeholder}</option>`;
-        selectElement.disabled = true;
-        selectElement.classList.add('bg-slate-100', 'text-slate-400');
-        selectElement.classList.remove('bg-white', 'text-slate-700');
-    }
-
-    // Inicialización de filtros
-    async function initializeFilters() {
-        try {
-            const response = await fetch(`{% url "profile-get-options" %}?field=category`);
-            const categories = await response.json();
-            populateSelect(categorySelect, categories, 'Seleccionar tipo...');
-        } catch (error) { console.error(error); }
-    }
-
-    // Listener para encontrar perfil único por filtros
-    async function findUniqueProfile() {
-        const category = categorySelect.value;
-        const height = heightSelect.value;
-        const width = widthSelect.value;
-        const weight = weightSelect.value;
-
-        if (!category || !height || !width || !weight) {
-            guidedAddButtonContainer.classList.add('hidden');
-            return;
+    
+        // ==========================================
+        // 5. BÚSQUEDA Y FILTROS (Mismo código original)
+        // ==========================================
+        const handleAutocompleteSearch = debounce(async (event) => {
+            const term = event.target.value;
+            if (term.length < 1) {
+                autocompleteResults.style.display = 'none';
+                return;
+            }
+    
+            try {
+                const response = await fetch(`{% url 'profile-search' %}?term=${encodeURIComponent(term)}`);
+                const results = await response.json();
+                
+                autocompleteResults.innerHTML = '';
+                if (results.length > 0) {
+                    results.forEach(result => {
+                        const item = document.createElement('div');
+                        item.className = 'p-4 hover:bg-[#4A90E2]/10 cursor-pointer transition-all border-b border-slate-100 last:border-0 flex items-center justify-between group';
+                        item.innerHTML = `
+                            <div>
+                                <div class="font-bold text-[#002B5B]">${result.text}</div>
+                                <div class="text-xs text-slate-500 mt-1">Click para configurar</div>
+                            </div>
+                            <i class="fas fa-arrow-right text-[#4A90E2] opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                        `;
+                        item.addEventListener('click', async () => {
+                            profileSearchInput.value = '';
+                            autocompleteResults.style.display = 'none';
+                            const profileResponse = await fetch(`{% url 'profile-detail' 9999 %}`.replace('9999', result.id));
+                            const profile = await profileResponse.json();
+                            openStructuralModal(profile);
+                        });
+                        autocompleteResults.appendChild(item);
+                    });
+                    autocompleteResults.style.display = 'block';
+                } else {
+                    autocompleteResults.innerHTML = '<div class="p-4 text-center text-slate-500">No se encontraron perfiles.</div>';
+                    autocompleteResults.style.display = 'block';
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }, 300);
+    
+        async function populateSelect(selectElement, options, placeholder) {
+            selectElement.innerHTML = `<option value="">${placeholder}</option>`;
+            options.forEach(option => {
+                selectElement.add(new Option(option, option));
+            });
+            selectElement.disabled = false;
+            selectElement.classList.remove('bg-slate-100', 'text-slate-400');
+            selectElement.classList.add('bg-white', 'text-slate-700');
         }
-
-        try {
-            const params = new URLSearchParams({ category, attributes__ALTURA_d: height, attributes__ANCHURA_bf: width, attributes__PESO_KG_M: weight });
-            const response = await fetch(`{% url "profile-find-unique" %}?${params.toString()}`);
-            const profile = await response.json();
-
-            if (profile && profile.id) {
-                guidedProfileName.textContent = profile.name;
-                addFromGuidedBtn.onclick = () => openStructuralModal(profile);
-                guidedAddButtonContainer.classList.remove('hidden');
-            } else {
+    
+        function resetSelect(selectElement, placeholder) {
+            selectElement.innerHTML = `<option>${placeholder}</option>`;
+            selectElement.disabled = true;
+            selectElement.classList.add('bg-slate-100', 'text-slate-400');
+            selectElement.classList.remove('bg-white', 'text-slate-700');
+        }
+    
+        async function initializeFilters() {
+            try {
+                const response = await fetch(`{% url "profile-get-options" %}?field=category`);
+                const categories = await response.json();
+                populateSelect(categorySelect, categories, 'Seleccionar tipo...');
+            } catch (error) { console.error(error); }
+        }
+    
+        async function findUniqueProfile() {
+            const category = categorySelect.value;
+            const height = heightSelect.value;
+            const width = widthSelect.value;
+            const weight = weightSelect.value;
+    
+            if (!category || !height || !width || !weight) {
+                guidedAddButtonContainer.classList.add('hidden');
+                return;
+            }
+    
+            try {
+                const params = new URLSearchParams({ category, attributes__ALTURA_d: height, attributes__ANCHURA_bf: width, attributes__PESO_KG_M: weight });
+                const response = await fetch(`{% url "profile-find-unique" %}?${params.toString()}`);
+                const profile = await response.json();
+    
+                if (profile && profile.id) {
+                    guidedProfileName.textContent = profile.name;
+                    addFromGuidedBtn.onclick = () => openStructuralModal(profile);
+                    guidedAddButtonContainer.classList.remove('hidden');
+                } else {
+                    guidedAddButtonContainer.classList.add('hidden');
+                }
+            } catch (error) {
                 guidedAddButtonContainer.classList.add('hidden');
             }
-        } catch (error) {
-            guidedAddButtonContainer.classList.add('hidden');
         }
-    }
-
-    // Listeners de filtros encadenados
-    categorySelect.addEventListener('change', async (e) => {
-        resetSelect(heightSelect, 'Cargando...'); resetSelect(widthSelect, '...'); resetSelect(weightSelect, '...');
-        const category = e.target.value;
-        if (!category) return;
-        const response = await fetch(`/api/profiles/get-options/?field=attributes__ALTURA_d&category=${category}`);
-        populateSelect(heightSelect, await response.json(), 'Seleccionar altura...');
-    });
-
-    heightSelect.addEventListener('change', async (e) => {
-        resetSelect(widthSelect, 'Cargando...'); resetSelect(weightSelect, '...');
-        const height = e.target.value;
-        const category = categorySelect.value;
-        if (!height) return;
-        const params = new URLSearchParams({ field: 'attributes__ANCHURA_bf', category, attributes__ALTURA_d: height });
-        const response = await fetch(`/api/profiles/get-options/?${params.toString()}`);
-        populateSelect(widthSelect, await response.json(), 'Seleccionar ancho...');
-    });
-
-    widthSelect.addEventListener('change', async (e) => {
-        resetSelect(weightSelect, 'Cargando...');
-        const width = e.target.value;
-        const category = categorySelect.value;
-        const height = heightSelect.value;
-        if (!width) return;
-        const params = new URLSearchParams({ field: 'attributes__PESO_KG_M', category, attributes__ALTURA_d: height, attributes__ANCHURA_bf: width });
-        const response = await fetch(`/api/profiles/get-options/?${params.toString()}`);
-        populateSelect(weightSelect, await response.json(), 'Seleccionar peso...');
-    });
-
-    weightSelect.addEventListener('change', findUniqueProfile);
-
-
-    // ==========================================
-    // 6. GESTIÓN DE ITEMS Y CÁLCULO (NIVEL 2)
-    // ==========================================
-
-    function addStructuralItem() {
-        const largoM = parseFloat(modalLargoM.value) || 0;
-        const cant = parseInt(modalCantComprar.value) || 1;
-        
-        // Agregar cada pieza individual al array
-        const newItem = {
-            profile_id: modalProfileId.value,
-            material_nombre: modalProfileNombre.value,
-            largo_m: largoM,
-            cant_a_comprar: cant, // Cantidad de piezas de este largo
-            valor_unitario: parseFloat(modalValorUnitario.value) || 0, // $/m
-            peso_kg_m: parseFloat(modalProfilePesoKgM.value) || 0,
-        };
-        
-        structuralItems.push(newItem);
-        renderAndCalculateOptimized(); // Llamamos a la función nueva
-        closeStructuralModalFn();
-    }
-
-    function addOverheadItem() {
-        const descripcion = overheadDesc.value.trim();
-        if (!descripcion) { alert("Falta descripción"); return; }
-        
-        overheadItems.push({
-            descripcion,
-            unidad: overheadUnidad.value.trim() || 'Unidad',
-            cantidad: parseFloat(overheadCantidad.value) || 1,
-            valor_unitario: parseFloat(overheadValor.value) || 0,
+    
+        categorySelect.addEventListener('change', async (e) => {
+            resetSelect(heightSelect, 'Cargando...'); resetSelect(widthSelect, '...'); resetSelect(weightSelect, '...');
+            const category = e.target.value;
+            if (!category) return;
+            const response = await fetch(`/api/profiles/get-options/?field=attributes__ALTURA_d&category=${category}`);
+            populateSelect(heightSelect, await response.json(), 'Seleccionar altura...');
         });
-        renderAndCalculateOptimized();
-        
-        // Reset inputs
-        overheadDesc.value = ''; overheadUnidad.value = ''; overheadCantidad.value = '1'; overheadValor.value = '0';
-    }
-
-    // Función para borrar (Ahora borra el grupo completo o resetea)
-    // Para simplificar, borraremos por índice del array original y recalcularemos
-    window.removeItem = function(type, index) {
-        if (!confirm("¿Eliminar ítem?")) return;
-        if (type === 'structural') structuralItems.splice(index, 1);
-        else overheadItems.splice(index, 1);
-        renderAndCalculateOptimized();
-    }
-
-
-    // --- FUNCIÓN PRINCIPAL DE RENDERIZADO Y CÁLCULO ---
-    function renderAndCalculateOptimized() {
-        
-        // A. AGRUPAR ITEMS POR PERFIL (Para poder optimizar cortes)
-        const grupos = {};
-        
-        structuralItems.forEach((item, index) => {
-            if (!grupos[item.profile_id]) {
-                // CREAR GRUPO NUEVO
-                grupos[item.profile_id] = {
-                    id: item.profile_id,
-                    nombre: item.material_nombre,
-                    peso_kg_m: item.peso_kg_m,
-                    valor_unitario_m: item.valor_unitario,
-                    cortes: [], 
-                    indicesOriginales: [] 
-                };
-            } else {
-                // --- FIX PRECIO: ACTUALIZAR SI ES VÁLIDO ---
-                // Si el grupo ya existe pero el nuevo item trae un precio real (>0),
-                // actualizamos el precio del grupo. Así el 0 no borra al 10000.
-                if (item.valor_unitario > 0) {
-                    grupos[item.profile_id].valor_unitario_m = item.valor_unitario;
-                }
-            }
-            
-            // Agregar cortes (lógica de siempre)
-            for(let i=0; i<item.cant_a_comprar; i++) {
-                grupos[item.profile_id].cortes.push(item.largo_m);
-                grupos[item.profile_id].indicesOriginales.push(index);
-            }
+    
+        heightSelect.addEventListener('change', async (e) => {
+            resetSelect(widthSelect, 'Cargando...'); resetSelect(weightSelect, '...');
+            const height = e.target.value;
+            const category = categorySelect.value;
+            if (!height) return;
+            const params = new URLSearchParams({ field: 'attributes__ANCHURA_bf', category, attributes__ALTURA_d: height });
+            const response = await fetch(`/api/profiles/get-options/?${params.toString()}`);
+            populateSelect(widthSelect, await response.json(), 'Seleccionar ancho...');
         });
-
-        // B. CALCULAR OPTIMIZACIÓN POR GRUPO
-        let htmlRows = '';
-        let totalStructuralCost = 0;
-        let totalWeight = 0;
-        let totalMetrosComprados = 0; 
-
-        // Recorremos cada grupo (Cada tipo de perfil H-200, H-300...)
-        for (const pid in grupos) {
-            const grupo = grupos[pid];
+    
+        widthSelect.addEventListener('change', async (e) => {
+            resetSelect(weightSelect, 'Cargando...');
+            const width = e.target.value;
+            const category = categorySelect.value;
+            const height = heightSelect.value;
+            if (!width) return;
+            const params = new URLSearchParams({ field: 'attributes__PESO_KG_M', category, attributes__ALTURA_d: height, attributes__ANCHURA_bf: width });
+            const response = await fetch(`/api/profiles/get-options/?${params.toString()}`);
+            populateSelect(weightSelect, await response.json(), 'Seleccionar peso...');
+        });
+    
+        weightSelect.addEventListener('change', findUniqueProfile);
+    
+    
+        // ==========================================
+        // 6. GESTIÓN DE ITEMS Y CÁLCULO (LOGICA EXCEL)
+        // ==========================================
+    
+        function addStructuralItem() {
+            const largoM = parseFloat(modalLargoM.value) || 0;
+            const cant = parseInt(modalCantComprar.value) || 1;
             
-            // --- 1. LÓGICA DE CORTE AUTOMÁTICO (NUEVO) ---
-            // Separa las piezas gigantes en tiras comerciales completas + restos
-            let cortesParaOptimizar = [];
-            let tirasCompletasExtra = 0;
-
-            grupo.cortes.forEach(largo => {
-                if (largo > LARGO_COMERCIAL_ESTANDAR) {
-                    // Si es gigante (ej: 14m con tira de 6m)
-                    const tirasEnteras = Math.floor(largo / LARGO_COMERCIAL_ESTANDAR);
-                    const resto = largo % LARGO_COMERCIAL_ESTANDAR;
-
-                    tirasCompletasExtra += tirasEnteras; // Sumamos directo al total
-                    
-                    // Solo si sobra un pedacito, lo mandamos a optimizar
-                    // Usamos toFixed para evitar errores de punto flotante (ej: 0.000001)
-                    if (resto > 0.001) {
-                        cortesParaOptimizar.push(resto);
-                    }
-                } else {
-                    // Si cabe en una tira normal, pasa directo
-                    cortesParaOptimizar.push(largo);
-                }
+            // Crear objeto crudo (lo que pide el usuario)
+            const newItem = {
+                profile_id: modalProfileId.value,
+                material_nombre: modalProfileNombre.value,
+                largo_m: largoM,
+                cantidad_piezas: cant,
+                valor_unitario_m: parseFloat(modalValorUnitario.value) || 0,
+                peso_kg_m: parseFloat(modalProfilePesoKgM.value) || 0,
+            };
+            
+            structuralItems.push(newItem);
+            renderAndCalculateExcelsLogic(); // <-- Llamada a la nueva función
+            closeStructuralModalFn();
+        }
+    
+        function addOverheadItem() {
+            const descripcion = overheadDesc.value.trim();
+            if (!descripcion) { alert("Falta descripción"); return; }
+            
+            overheadItems.push({
+                descripcion,
+                unidad: overheadUnidad.value.trim() || 'Unidad',
+                cantidad: parseFloat(overheadCantidad.value) || 1,
+                valor_unitario: parseFloat(overheadValor.value) || 0,
             });
-
-            // --- 2. EJECUTAR ALGORITMO SOLO CON LOS CORTES QUE CABEN ---
-            const resultado = calcularCortesOptimos(cortesParaOptimizar, LARGO_COMERCIAL_ESTANDAR);
+            renderAndCalculateExcelsLogic();
             
-            // Sumamos las tiras extra que calculamos arriba
-            resultado.cantidadBarras += tirasCompletasExtra;
-            resultado.metrosComprados += (tirasCompletasExtra * LARGO_COMERCIAL_ESTANDAR);
-
-            // --- 3. CÁLCULOS FINANCIEROS Y TÉCNICOS ---
-            const costoTira = LARGO_COMERCIAL_ESTANDAR * grupo.valor_unitario_m;
-            const costoTotalGrupo = resultado.cantidadBarras * costoTira;
-            
-            const metrosRealesNecesarios = grupo.cortes.reduce((a, b) => a + b, 0);
-            const eficiencia = (metrosRealesNecesarios / resultado.metrosComprados) * 100;
-            const pesoGrupo = metrosRealesNecesarios * grupo.peso_kg_m;
-
-            // 4. Acumuladores Globales
-            totalStructuralCost += costoTotalGrupo;
-            totalWeight += pesoGrupo;
-            totalMetrosComprados += resultado.metrosComprados;
-
-            // --- 5. GENERAR TEXTO DETALLE (VISUAL) ---
-            const detalleCortesTexto = structuralItems
-                .filter(i => i.profile_id === grupo.id)
-                .map(i => `${i.largo_m}m`) 
-                .join(', ');
-
-            // 6. GENERAR HTML
-            htmlRows += `
-                <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
-                    <td class="px-6 py-4">
-                        <div class="font-bold text-[#002B5B]">${grupo.nombre}</div>
-                        <div class="text-xs text-slate-500 mt-1">
-                            <i class="fas fa-layer-group text-[#4A90E2] mr-1"></i>
-                            ${grupo.cortes.length} cortes:
-                        </div>
-                        <div class="text-[11px] font-mono text-slate-400 leading-tight mt-1 max-w-xs break-words">
-                            [${detalleCortesTexto}]
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 text-center">
-                        <div class="text-slate-700 font-medium">${metrosRealesNecesarios.toFixed(2)} m</div>
-                        <div class="text-xs text-slate-400">Total Neto</div>
-                    </td>
-                    <td class="px-6 py-4 text-center">
-                        <span class="px-3 py-1 bg-[#002B5B]/10 text-[#002B5B] font-bold rounded-lg border border-[#002B5B]/20">
-                            ${resultado.cantidadBarras} Tiras
-                        </span>
-                        <div class="text-xs text-slate-400 mt-1">de ${LARGO_COMERCIAL_ESTANDAR}m</div>
-                    </td>
-                    <td class="px-6 py-4 text-right">
-                         <div class="font-bold ${eficiencia > 85 ? 'text-green-600' : 'text-amber-600'}">
-                            ${eficiencia.toFixed(1)}%
-                         </div>
-                         <div class="text-xs text-slate-400">Eficiencia</div>
-                    </td>
-                    <td class="px-6 py-4 text-right">
-                        <span class="font-mono text-red-500 font-medium">${resultado.desperdicioTotal.toFixed(2)} m</span>
-                        <div class="text-xs text-slate-400">Residuo</div>
-                    </td>
-                    <td class="px-6 py-4 text-right font-bold text-[#002B5B] text-lg">
-                        ${formatCurrency(costoTotalGrupo)}
-                    </td>
-                    <td class="px-6 py-4 text-center">
-                        <button onclick="eliminarGrupo('${grupo.id}')" class="text-slate-400 hover:text-red-500 transition-colors" title="Eliminar todo este perfil">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
+            overheadDesc.value = ''; overheadUnidad.value = ''; overheadCantidad.value = '1'; overheadValor.value = '0';
+        }
+    
+        window.removeItem = function(type, index) {
+            if (!confirm("¿Eliminar ítem?")) return;
+            if (type === 'overhead') {
+                overheadItems.splice(index, 1);
+                renderAndCalculateExcelsLogic();
+            }
         }
         
-        // Función auxiliar global para el botón de eliminar grupo
+        // Función global para eliminar perfil completo
         window.eliminarGrupo = function(profileId) {
             if(!confirm("¿Eliminar todos los cortes de este perfil?")) return;
             structuralItems = structuralItems.filter(item => item.profile_id !== profileId);
-            renderAndCalculateOptimized();
+            renderAndCalculateExcelsLogic();
         };
-
-        // Renderizar Tabla Estructural
-        if (structuralItems.length === 0) {
-            structuralItemsTableBody.innerHTML = `<tr><td colspan="7" class="px-6 py-16 text-center bg-slate-50/50 text-slate-400">No hay materiales agregados</td></tr>`;
-        } else {
-            structuralItemsTableBody.innerHTML = htmlRows;
+    
+        // --- FUNCIÓN PRINCIPAL NUEVA (LAS 9 COLUMNAS) ---
+        function renderAndCalculateExcelsLogic() {
+            
+            // 1. Agrupar
+            const grupos = {};
+            structuralItems.forEach(item => {
+                if (!grupos[item.profile_id]) {
+                    grupos[item.profile_id] = {
+                        id: item.profile_id,
+                        nombre: item.material_nombre,
+                        peso_kg_m: item.peso_kg_m,
+                        valor_unitario_m: item.valor_unitario_m,
+                        total_metros: 0,
+                        cortes_detalle: []
+                    };
+                }
+                grupos[item.profile_id].total_metros += (item.largo_m * item.cantidad_piezas);
+                if (item.valor_unitario_m > 0) grupos[item.profile_id].valor_unitario_m = item.valor_unitario_m;
+                grupos[item.profile_id].cortes_detalle.push(`${item.cantidad_piezas}x${item.largo_m}m`);
+            });
+    
+            // 2. Calcular y Renderizar
+            let htmlRows = '';
+            let totalStructuralCost = 0;
+            let totalWeightGlobal = 0;
+            let itemsParaGuardarEnBD = []; 
+    
+            for (const pid in grupos) {
+                const grupo = grupos[pid];
+                
+                // --- CÁLCULOS TIPO EXCEL ---
+                const metrosTotales = grupo.total_metros;
+                const unidadComercialCalculada = metrosTotales / LARGO_COMERCIAL_ESTANDAR; // División pura
+                const cantNecesaria = Math.ceil(unidadComercialCalculada); // Redondeo arriba
+                const cantAComprar = Math.ceil(cantNecesaria * 1.25); // +25% Seguridad
+                
+                // Precios y Pesos (Basado en tiras de 6m)
+                const precioPorBarra6m = grupo.valor_unitario_m * LARGO_COMERCIAL_ESTANDAR;
+                const costoTotalGrupo = cantAComprar * precioPorBarra6m;
+                const pesoTotalGrupo = cantAComprar * LARGO_COMERCIAL_ESTANDAR * grupo.peso_kg_m;
+    
+                totalStructuralCost += costoTotalGrupo;
+                totalWeightGlobal += pesoTotalGrupo;
+    
+                // Datos para BD
+                itemsParaGuardarEnBD.push({
+                    material_nombre: grupo.nombre,
+                    largo_mm: 6000, largo_m: 6.0, unidad_comercial: 6.0, 
+                    cant_necesaria: cantNecesaria, cant_a_comprar: cantAComprar,
+                    valor_unitario: precioPorBarra6m, peso_kg_m: grupo.peso_kg_m
+                });
+    
+                // --- HTML (9 COLUMNAS) ---
+                htmlRows += `
+                    <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 text-sm group">
+                        <td class="px-3 py-4 font-bold text-[#002B5B]">
+                            ${grupo.nombre}
+                            <div class="text-[10px] text-slate-400 font-normal truncate max-w-[120px]" title="${grupo.cortes_detalle.join(', ')}">
+                               ${grupo.cortes_detalle.join(', ')}
+                            </div>
+                        </td>
+                        <td class="px-3 py-4 text-center text-slate-700 font-medium">${metrosTotales.toFixed(2)} m</td>
+                        <td class="px-3 py-4 text-center text-slate-500">${unidadComercialCalculada.toFixed(2)}</td>
+                        <td class="px-3 py-4 text-center font-bold text-blue-600">${cantNecesaria}</td>
+                        <td class="px-3 py-4 text-center">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 font-bold rounded border border-green-200 shadow-sm">${cantAComprar}</span>
+                        </td>
+                        <td class="px-3 py-4 text-right text-slate-500 text-xs">${grupo.peso_kg_m.toFixed(2)}</td>
+                        <td class="px-3 py-4 text-right font-medium text-slate-700">${pesoTotalGrupo.toFixed(1)} kg</td>
+                        <td class="px-3 py-4 text-right text-slate-500">$ ${Math.round(precioPorBarra6m).toLocaleString('es-CL')}</td>
+                        <td class="px-3 py-4 text-right font-bold text-[#002B5B]">$ ${Math.round(costoTotalGrupo).toLocaleString('es-CL')}</td>
+                        <td class="px-3 py-4 text-center">
+                            <button onclick="eliminarGrupo('${grupo.id}')" class="text-slate-300 hover:text-red-500 transition-colors">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
+    
+            // Renderizar Tabla Estructural
+            structuralItemsTableBody.innerHTML = (htmlRows === '') ? 
+                '<tr><td colspan="10" class="px-6 py-16 text-center text-slate-400 bg-slate-50/50">No hay materiales agregados</td></tr>' : htmlRows;
+    
+            // Renderizar Insumos (Overhead)
+            overheadItemsTableBody.innerHTML = overheadItems.map((item, index) => `
+                <tr class="hover:bg-slate-50 border-b border-slate-100">
+                    <td class="px-4 py-3 font-medium text-[#002B5B]">${item.descripcion}</td>
+                    <td class="px-3 py-3 text-center text-slate-600">${item.unidad}</td>
+                    <td class="px-3 py-3 text-center font-bold">${item.cantidad}</td>
+                    <td class="px-3 py-3 text-right font-bold text-red-600">${formatCurrency(item.valor_unitario)}</td>
+                    <td class="px-4 py-3 text-right font-bold text-[#002B5B] text-lg">${formatCurrency(item.cantidad * item.valor_unitario)}</td>
+                    <td class="px-3 py-3 text-center">
+                        <button onclick="removeItem('overhead', ${index})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash-alt"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+    
+            // Calcular Totales Generales
+            const overheadTotalVal = overheadItems.reduce((sum, item) => sum + (item.cantidad * item.valor_unitario), 0);
+            const grandTotal = totalStructuralCost + overheadTotalVal;
+    
+            // Actualizar UI Totales
+            structuralTotalValueSpan.textContent = formatCurrency(totalStructuralCost);
+            structuralTotalWeightSpan.textContent = `${totalWeightGlobal.toFixed(2)} kg`;
+            overheadTotalValueSpan.textContent = formatCurrency(overheadTotalVal);
+            grandTotalGeneralSpan.textContent = formatCurrency(grandTotal);
+            structuralCountSpan.textContent = `${itemsParaGuardarEnBD.length}`; // Cantidad de items (tipos de perfil)
+    
+            // Actualizar Inputs Ocultos (Para Django)
+            structuralItemsJsonInput.value = JSON.stringify(itemsParaGuardarEnBD);
+            overheadItemsJsonInput.value = JSON.stringify(overheadItems);
+            totalCostoInput.value = grandTotal;
         }
-
-        // C. RENDERIZAR INSUMOS (Overhead)
-        overheadItemsTableBody.innerHTML = overheadItems.map((item, index) => `
-            <tr class="hover:bg-slate-50 border-b border-slate-100">
-                <td class="px-4 py-3 font-medium text-[#002B5B]">${item.descripcion}</td>
-                <td class="px-3 py-3 text-center text-slate-600">${item.unidad}</td>
-                <td class="px-3 py-3 text-center font-bold">${item.cantidad}</td>
-                <td class="px-3 py-3 text-right font-bold text-red-600">${formatCurrency(item.valor_unitario)}</td>
-                <td class="px-4 py-3 text-right font-bold text-[#002B5B] text-lg">${formatCurrency(item.cantidad * item.valor_unitario)}</td>
-                <td class="px-3 py-3 text-center">
-                    <button onclick="removeItem('overhead', ${index})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash-alt"></i></button>
-                </td>
-            </tr>
-        `).join('');
-
-        // D. ACTUALIZAR TOTALES GENERALES
-        const overheadTotalVal = overheadItems.reduce((sum, item) => sum + (item.cantidad * item.valor_unitario), 0);
-        const grandTotal = totalStructuralCost + overheadTotalVal;
-
-        structuralTotalValueSpan.textContent = formatCurrency(totalStructuralCost);
-        structuralTotalWeightSpan.textContent = formatWeight(totalWeight);
-        overheadTotalValueSpan.textContent = formatCurrency(overheadTotalVal);
-        grandTotalGeneralSpan.textContent = formatCurrency(grandTotal);
-        structuralCountSpan.textContent = `${totalMetrosComprados.toFixed(1)} m`;
-
-        // Actualizar inputs ocultos para el Backend
-        structuralItemsJsonInput.value = JSON.stringify(structuralItems);
-        overheadItemsJsonInput.value = JSON.stringify(overheadItems);
-        totalCostoInput.value = grandTotal;
-    }
-
-    // --- LISTENERS ---
-    profileSearchInput.addEventListener('input', handleAutocompleteSearch);
-    document.addEventListener('click', (e) => { if (!profileSearchInput.contains(e.target)) autocompleteResults.style.display = 'none'; });
-    confirmAddStructuralItem.addEventListener('click', addStructuralItem);
-    addOverheadItemButton.addEventListener('click', addOverheadItem);
-    form.addEventListener('submit', (e) => {
-        if (structuralItems.length === 0 && overheadItems.length === 0) {
-            e.preventDefault(); alert("Agregue al menos un ítem.");
-        }
+    
+        // --- LISTENERS ---
+        profileSearchInput.addEventListener('input', handleAutocompleteSearch);
+        document.addEventListener('click', (e) => { if (!profileSearchInput.contains(e.target)) autocompleteResults.style.display = 'none'; });
+        confirmAddStructuralItem.addEventListener('click', addStructuralItem);
+        addOverheadItemButton.addEventListener('click', addOverheadItem);
+        form.addEventListener('submit', (e) => {
+            if (structuralItems.length === 0 && overheadItems.length === 0) {
+                e.preventDefault(); alert("Agregue al menos un ítem.");
+            }
+        });
+    
+        // START
+        initializeFilters();
+        renderAndCalculateExcelsLogic(); // Inicia vacio
     });
-
-    // START
-    initializeFilters();
-    renderAndCalculateOptimized();
-});
 </script>
 {% endblock %}
