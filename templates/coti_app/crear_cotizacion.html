@@ -117,22 +117,35 @@
 
                         <div>
                             <label class="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">
-                                <i class="fas fa-user-tie mr-1 text-[#4A90E2]"></i>Cliente
+                                <i class="fas fa-building mr-1 text-[#4A90E2]"></i>Empresa
                             </label>
                             <div class="flex gap-2">
-                                <select name="cliente" id="cliente_id" class="flex-1 bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:ring-2 focus:ring-[#4A90E2] transition-all">
-                                    <option value="">Seleccionar cliente...</option>
+                                <select name="cliente" id="empresa_select" class="flex-1 bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:ring-2 focus:ring-[#4A90E2] transition-all cursor-pointer">
+                                    <option value="">Seleccionar empresa...</option>
                                     {% for cliente in clientes_disponibles %}
                                         <option value="{{ cliente.id }}">{{ cliente.nombre }}</option>
                                     {% endfor %}
                                 </select>
-                                <button type="button" id="openClientModalButton" class="w-12 h-12 bg-gradient-to-br from-[#4A90E2] to-[#002B5B] text-white hover:shadow-lg rounded-xl transition-all transform hover:scale-105">
+                        
+                                <a href="{% url 'añadir_cliente' %}" target="_blank" id="btnNuevaEmpresa" class="w-12 h-12 flex items-center justify-center bg-white border-2 border-slate-200 text-[#4A90E2] hover:bg-slate-50 rounded-xl transition-all">
                                     <i class="fas fa-plus"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">
+                                <i class="fas fa-user-tie mr-1 text-[#4A90E2]"></i>Contacto Asociado
+                            </label>
+                            <div class="flex gap-2">
+                                <select name="contacto" id="contacto_select" disabled class="flex-1 bg-slate-100 border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-400 font-medium focus:ring-2 focus:ring-[#4A90E2] transition-all disabled:cursor-not-allowed">
+                                    <option value="">Primero seleccione empresa...</option>
+                                </select>
+                                
+                                <button type="button" id="btnNuevoContacto" disabled class="w-12 h-12 bg-gradient-to-br from-slate-300 to-slate-400 text-white rounded-xl transition-all shadow-none cursor-not-allowed">
+                                    <i class="fas fa-user-plus"></i>
                                 </button>
                             </div>
-                            <p id="empty-client-message" class="text-xs text-red-500 mt-2 hidden font-semibold">
-                                <i class="fas fa-exclamation-triangle mr-1"></i>Debe seleccionar un cliente
-                            </p>
                         </div>
                     </div>
                 </div>
@@ -251,7 +264,7 @@
                             </div>
                             
                             <div class="group">
-                                <label class="text-xs font-bold text-slate-500 uppercase mb-2 block">Espersores (Ala / Alma)</label>
+                                <label class="text-xs font-bold text-slate-500 uppercase mb-2 block">Espesores (Ala / Alma)</label>
                                 <div class="relative">
                                     <select id="thickness-select" disabled class="w-full bg-slate-100 border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-400 font-medium appearance-none transition-all disabled:cursor-not-allowed">
                                         <option>Primero ancho...</option>
@@ -305,7 +318,6 @@
                                         <th class="px-3 py-4 text-right">Peso Total</th>
                                         <th class="px-3 py-4 text-right">Valor Unit.</th>
                                         <th class="px-3 py-4 text-right">Valor Total</th>
-                                        <th class="px-3 py-4"></th>
                                     </tr>
                                 </thead>
                             </thead>
@@ -548,6 +560,79 @@
         const structuralItemsJsonInput = document.getElementById('structuralItemsJsonInput');
         const overheadItemsJsonInput = document.getElementById('overheadItemsJsonInput');
         const totalCostoInput = document.getElementById('totalCostoInput');
+
+    // ==========================================
+    // LÓGICA EMPRESA -> CONTACTO (CON REDIRECCIÓN)
+    // ==========================================
+    const empresaSelect = document.getElementById('empresa_select');
+    const contactoSelect = document.getElementById('contacto_select');
+    const btnNuevoContacto = document.getElementById('btnNuevoContacto');
+
+    // Preparamos la URL base usando el tag de Django con un ID temporal (0)
+    // Django generará algo como: /usuarios/0/contactos/crear/
+    const baseUrlCrearContacto = "{% url 'añadir_persona_contacto' 0 %}";
+
+    empresaSelect.addEventListener('change', async (e) => {
+        const empresaId = e.target.value;
+
+        // Resetear UI
+        contactoSelect.innerHTML = '<option value="">Cargando contactos...</option>';
+        contactoSelect.disabled = true;
+        contactoSelect.classList.add('bg-slate-100', 'text-slate-400');
+        contactoSelect.classList.remove('bg-white', 'text-slate-700');
+        
+        btnNuevoContacto.disabled = true;
+        btnNuevoContacto.classList.remove('from-[#4A90E2]', 'to-[#002B5B]', 'hover:shadow-lg', 'transform', 'hover:scale-105');
+        btnNuevoContacto.classList.add('from-slate-300', 'to-slate-400', 'cursor-not-allowed', 'shadow-none');
+        
+        // Limpiamos el evento click anterior para evitar errores
+        btnNuevoContacto.onclick = null; 
+
+        if (!empresaId) {
+            contactoSelect.innerHTML = '<option value="">Primero seleccione empresa...</option>';
+            return;
+        }
+
+        try {
+            // --- 1. CONFIGURAR EL BOTÓN DE NUEVO CONTACTO ---
+            // Reemplazamos el '0' por el ID real de la empresa (ej: '5')
+            // Resultado: /usuarios/5/contactos/crear/
+            const urlFinal = baseUrlCrearContacto.replace('0', empresaId);
+            
+            // Asignamos la redirección al click del botón
+            btnNuevoContacto.onclick = function() {
+                window.open(urlFinal, '_blank'); // Abre en nueva pestaña
+            };
+
+            // --- 2. CARGAR CONTACTOS EXISTENTES ---
+            const response = await fetch(`{% url 'get_contactos_por_empresa' %}?empresa_id=${empresaId}`);
+            const contactos = await response.json();
+
+            contactoSelect.innerHTML = '<option value="">Seleccionar contacto...</option>';
+
+            if (contactos.length > 0) {
+                contactos.forEach(c => {
+                    contactoSelect.add(new Option(c.nombre, c.id));
+                });
+            } else {
+                contactoSelect.add(new Option("Sin contactos registrados", ""));
+            }
+
+            // Habilitar Select
+            contactoSelect.disabled = false;
+            contactoSelect.classList.remove('bg-slate-100', 'text-slate-400');
+            contactoSelect.classList.add('bg-white', 'text-slate-700');
+
+            // Habilitar Botón
+            btnNuevoContacto.disabled = false;
+            btnNuevoContacto.classList.remove('from-slate-300', 'to-slate-400', 'cursor-not-allowed', 'shadow-none');
+            btnNuevoContacto.classList.add('bg-gradient-to-br', 'from-[#4A90E2]', 'to-[#002B5B]', 'hover:shadow-lg', 'transform', 'hover:scale-105');
+
+        } catch (error) {
+            console.error("Error cargando contactos:", error);
+            contactoSelect.innerHTML = '<option value="">Error al cargar</option>';
+        }
+    });
     
         async function findUniqueProfile() {
             const category = categorySelect.value;
@@ -588,8 +673,66 @@
                 guidedAddButtonContainer.classList.add('hidden');
             }
         }
-    
-        // 2. LISTENERS (Cascada)
+
+        // Busca esta función en tu script
+        // ==========================================
+        // ACTUALIZACIÓN AUTOMÁTICA (SIN BOTÓN)
+        // ==========================================
+        
+        async function actualizarListaEmpresas() {
+            const empresaSelect = document.getElementById('empresa_select');
+            const seleccionPrevia = empresaSelect.value; 
+
+            try {
+                // 1. Pedir datos a Django (Forzando NO usar caché)
+                const response = await fetch("{% url 'get_clientes_json' %}", {
+                    cache: "no-store", 
+                    headers: { "Cache-Control": "no-cache" }
+                });
+                
+                // Si el servidor falla, no hacemos nada para no romper la UI
+                if (!response.ok) return;
+
+                const clientes = await response.json();
+                
+                // 2. Limpiar select
+                empresaSelect.innerHTML = '<option value="">Seleccionar empresa...</option>';
+                
+                // 3. Rellenar con datos nuevos
+                clientes.forEach(cliente => {
+                    empresaSelect.add(new Option(cliente.nombre, cliente.id));
+                });
+                
+                // 4. Restaurar la selección anterior (Si la empresa aun existe)
+                if (seleccionPrevia) {
+                    const existe = clientes.some(c => c.id == seleccionPrevia);
+                    if (existe) {
+                        empresaSelect.value = seleccionPrevia;
+                    }
+                }
+                
+                // Opcional: Log para saber que funcionó (solo visible en consola F12)
+                console.log("Lista de empresas sincronizada.");
+
+            } catch (error) {
+                console.error("Error silencioso actualizando clientes:", error);
+            }
+        }
+
+    // LISTENER AUTOMÁTICO
+    // Se dispara cada vez que vuelves a la pestaña
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+            actualizarListaEmpresas(); 
+        }
+    });
+
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") {
+                actualizarListaEmpresas(); 
+            }
+        });
+
     
         // Tipo -> Altura (Igual)
         categorySelect.addEventListener('change', async (e) => {
