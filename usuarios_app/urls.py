@@ -10,4 +10,6 @@ urlpatterns = [
     path('clientes/crear/', views.añadir_cliente, name='añadir_cliente'),
     path('<int:pk>/detalle/', views.detalle_cliente, name='detalle_cliente'),
     path('<int:pk>/contactos/crear/', views.añadir_persona_contacto, name='añadir_persona_contacto'),
+    path('api/contactos/get-by-empresa/', views.get_contactos_por_empresa, name='get_contactos_por_empresa'),
+    path('api/clientes/list/', views.get_clientes_json, name='get_clientes_json'),
 ]

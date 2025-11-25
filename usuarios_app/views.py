@@ -2,6 +2,7 @@ from django.shortcuts import render,redirect,reverse
 from .forms import ClienteForm, PersonaContactoForm
 from .models import Cliente, PersonaContacto
 from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
 
 # Create your views here.
 
@@ -90,3 +91,26 @@ def añadir_persona_contacto(request, pk):
     
     # Si form.is_valid() falla, el código llega aquí y renderiza el formulario con errores.
     return render(request, 'usuarios_app/contactos_crear.html', context)
+
+def get_contactos_por_empresa(request):
+    """
+    Retorna una lista JSON de contactos asociados a una empresa (cliente_id).
+    Usado por el JavaScript de crear_cotizacion.html.
+    """
+    empresa_id = request.GET.get('empresa_id')
+    
+    if not empresa_id:
+        return JsonResponse([], safe=False)
+    
+    # Filtramos por el campo 'cliente' usando el ID recibido
+    # .values('id', 'nombre') crea un diccionario optimizado solo con los datos que necesitamos
+    contactos = PersonaContacto.objects.filter(cliente_id=empresa_id).values('id', 'nombre').order_by('nombre')
+    
+    # safe=False es necesario porque estamos retornando una lista, no un diccionario único
+    return JsonResponse(list(contactos), safe=False)
+
+def get_clientes_json(request):
+    # Retorna la lista de todos los clientes activos para refrescar el select vía AJAX.
+
+    clientes = Cliente.objects.all().values('id', 'nombre').order_by('nombre')
+    return JsonResponse(list(clientes), safe=False)
