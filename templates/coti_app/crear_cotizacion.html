@@ -251,9 +251,9 @@
                             </div>
                             
                             <div class="group">
-                                <label class="text-xs font-bold text-slate-500 uppercase mb-2 block">Peso</label>
+                                <label class="text-xs font-bold text-slate-500 uppercase mb-2 block">Espersores (Ala / Alma)</label>
                                 <div class="relative">
-                                    <select id="weight-select" disabled class="w-full bg-slate-100 border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-400 font-medium appearance-none transition-all disabled:cursor-not-allowed">
+                                    <select id="thickness-select" disabled class="w-full bg-slate-100 border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-400 font-medium appearance-none transition-all disabled:cursor-not-allowed">
                                         <option>Primero ancho...</option>
                                     </select>
                                     <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
@@ -503,7 +503,7 @@
         const categorySelect = document.getElementById('category-select');
         const heightSelect = document.getElementById('height-select');
         const widthSelect = document.getElementById('width-select');
-        const weightSelect = document.getElementById('weight-select');
+        const thicknessSelect = document.getElementById('thickness-select');
         
         // Búsqueda Guiada
         const guidedAddButtonContainer = document.getElementById('guided-add-button-container');
@@ -549,6 +549,117 @@
         const overheadItemsJsonInput = document.getElementById('overheadItemsJsonInput');
         const totalCostoInput = document.getElementById('totalCostoInput');
     
+        async function findUniqueProfile() {
+            const category = categorySelect.value;
+            const height = heightSelect.value;
+            const width = widthSelect.value;
+            const thicknessRaw = thicknessSelect.value; // Viene como "50,16"
+    
+            if (!category || !height || !width || !thicknessRaw) {
+                guidedAddButtonContainer.classList.add('hidden');
+                return;
+            }
+    
+            // SEPARAMOS LOS VALORES (Ala y Alma)
+            const [tf, tw] = thicknessRaw.split(',');
+    
+            try {
+                // Enviamos AMBOS espesores para filtrar con precisión
+                const params = new URLSearchParams({ 
+                    category, 
+                    attributes__ALTURA_d: height, 
+                    attributes__ANCHURA_bf: width, 
+                    attributes__DIMENSION_tf: tf, // Espesor Ala
+                    attributes__DIMENSION_tw: tw  // Espesor Alma
+                });
+                
+                const response = await fetch(`{% url "profile-find-unique" %}?${params.toString()}`);
+                const profile = await response.json();
+    
+                if (profile && profile.id) {
+                    guidedProfileName.textContent = profile.name;
+                    addFromGuidedBtn.onclick = () => openStructuralModal(profile);
+                    guidedAddButtonContainer.classList.remove('hidden');
+                } else {
+                    guidedAddButtonContainer.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error(error);
+                guidedAddButtonContainer.classList.add('hidden');
+            }
+        }
+    
+        // 2. LISTENERS (Cascada)
+    
+        // Tipo -> Altura (Igual)
+        categorySelect.addEventListener('change', async (e) => {
+            guidedAddButtonContainer.classList.add('hidden');
+            resetSelect(heightSelect, 'Cargando...'); resetSelect(widthSelect, '...'); resetSelect(thicknessSelect, '...');
+            const category = e.target.value;
+            if (!category) return;
+            const response = await fetch(`/api/profiles/get-options/?field=attributes__ALTURA_d&category=${category}`);
+            populateSelect(heightSelect, await response.json(), 'Seleccionar altura...');
+        });
+    
+        // Altura -> Ancho (Igual)
+        heightSelect.addEventListener('change', async (e) => {
+            guidedAddButtonContainer.classList.add('hidden');
+            resetSelect(widthSelect, 'Cargando...'); resetSelect(thicknessSelect, '...');
+            const height = e.target.value;
+            const category = categorySelect.value;
+            if (!height) return;
+            const params = new URLSearchParams({ field: 'attributes__ANCHURA_bf', category, attributes__ALTURA_d: height });
+            const response = await fetch(`/api/profiles/get-options/?${params.toString()}`);
+            populateSelect(widthSelect, await response.json(), 'Seleccionar ancho...');
+        });
+    
+        // Ancho -> ESPESORES COMBINADOS (Nuevo)
+        widthSelect.addEventListener('change', async (e) => {
+            guidedAddButtonContainer.classList.add('hidden');
+            resetSelect(thicknessSelect, 'Cargando...');
+            
+            const width = e.target.value;
+            const category = categorySelect.value;
+            const height = heightSelect.value;
+            
+            if (!width) return;
+            
+            // NOTA: Aquí necesitamos pedir las combinaciones disponibles.
+            // Si tu API no tiene un endpoint específico para combinaciones, 
+            // deberás agregar uno (ver paso 3 abajo) o usar un truco temporal.
+            // Asumiremos que llamamos a un endpoint que devuelve objetos {tf: 25, tw: 16}
+            
+            try {
+                const params = new URLSearchParams({ category, height, width });
+                // Llamada a tu API (Ver Nota Backend abajo)
+                const response = await fetch(`/api/profiles/get-thickness-combinations/?${params.toString()}`);
+                const combinations = await response.json(); 
+                
+                // Limpiamos y llenamos manualmente para dar formato personalizado
+                thicknessSelect.innerHTML = '<option value="">Seleccionar espesores...</option>';
+                
+                combinations.forEach(combo => {
+                    // AQUI FORMATEAMOS COMO EN TU FOTO: "50 / 16 mm"
+                    const textoVisual = `${combo.tf} / ${combo.tw} mm`;
+                    
+                    // El valor interno será "50,16" para poder separarlo después
+                    const valorInterno = `${combo.tf},${combo.tw}`;
+                    
+                    thicknessSelect.add(new Option(textoVisual, valorInterno));
+                });
+                
+                thicknessSelect.disabled = false;
+                thicknessSelect.classList.remove('bg-slate-100', 'text-slate-400');
+                thicknessSelect.classList.add('bg-white', 'text-slate-700');
+    
+            } catch (error) {
+                console.error("Error cargando espesores", error);
+                resetSelect(thicknessSelect, 'Error al cargar');
+            }
+        });
+    
+        // Espesor -> Buscar
+        thicknessSelect.addEventListener('change', findUniqueProfile);
     
         // ==========================================
         // 3. FUNCIONES DE UTILIDAD
@@ -699,15 +810,17 @@
             const category = categorySelect.value;
             const height = heightSelect.value;
             const width = widthSelect.value;
-            const weight = weightSelect.value;
+            const thicknessRaw = thicknessSelect.value;
     
-            if (!category || !height || !width || !weight) {
+            if (!category || !height || !width || !thicknessRaw) {
                 guidedAddButtonContainer.classList.add('hidden');
                 return;
             }
+
+            const [tf, tw] = thicknessRaw.split(',');
     
             try {
-                const params = new URLSearchParams({ category, attributes__ALTURA_d: height, attributes__ANCHURA_bf: width, attributes__PESO_KG_M: weight });
+                const params = new URLSearchParams({ category, attributes__ALTURA_d: height, attributes__ANCHURA_bf: width, attributes__DIMENSION_tf: tf, attributes__DIMENSION_tw: tw });
                 const response = await fetch(`{% url "profile-find-unique" %}?${params.toString()}`);
                 const profile = await response.json();
     
@@ -724,7 +837,10 @@
         }
     
         categorySelect.addEventListener('change', async (e) => {
-            resetSelect(heightSelect, 'Cargando...'); resetSelect(widthSelect, '...'); resetSelect(weightSelect, '...');
+            resetSelect(heightSelect, 'Cargando...'); 
+            resetSelect(widthSelect, '...'); 
+            resetSelect(thicknessSelect, '...'); // <--- AQUÍ ESTABA EL ERROR (antes decía weightSelect)
+            
             const category = e.target.value;
             if (!category) return;
             const response = await fetch(`/api/profiles/get-options/?field=attributes__ALTURA_d&category=${category}`);
@@ -732,7 +848,9 @@
         });
     
         heightSelect.addEventListener('change', async (e) => {
-            resetSelect(widthSelect, 'Cargando...'); resetSelect(weightSelect, '...');
+            resetSelect(widthSelect, 'Cargando...'); 
+            resetSelect(thicknessSelect, '...'); // <--- AQUÍ TAMBIÉN CORREGIR
+            
             const height = e.target.value;
             const category = categorySelect.value;
             if (!height) return;
@@ -742,17 +860,41 @@
         });
     
         widthSelect.addEventListener('change', async (e) => {
-            resetSelect(weightSelect, 'Cargando...');
+            resetSelect(thicknessSelect, 'Cargando...'); // <--- Y AQUÍ
+            
             const width = e.target.value;
             const category = categorySelect.value;
             const height = heightSelect.value;
+            
             if (!width) return;
-            const params = new URLSearchParams({ field: 'attributes__PESO_KG_M', category, attributes__ALTURA_d: height, attributes__ANCHURA_bf: width });
-            const response = await fetch(`/api/profiles/get-options/?${params.toString()}`);
-            populateSelect(weightSelect, await response.json(), 'Seleccionar peso...');
+            
+            try {
+                const params = new URLSearchParams({ category, height, width });
+                // Llamada a la API de combinaciones
+                const response = await fetch(`/api/profiles/get-thickness-combinations/?${params.toString()}`);
+                const combinations = await response.json(); 
+                
+                thicknessSelect.innerHTML = '<option value="">Seleccionar espesores...</option>';
+                
+                combinations.forEach(combo => {
+                    const textoVisual = `${combo.tf} / ${combo.tw} mm`;
+                    const valorInterno = `${combo.tf},${combo.tw}`;
+                    thicknessSelect.add(new Option(textoVisual, valorInterno));
+                });
+                
+                thicknessSelect.disabled = false;
+                thicknessSelect.classList.remove('bg-slate-100', 'text-slate-400');
+                thicknessSelect.classList.add('bg-white', 'text-slate-700');
+    
+            } catch (error) {
+                console.error("Error cargando espesores", error);
+                resetSelect(thicknessSelect, 'Error al cargar');
+            }
         });
     
-        weightSelect.addEventListener('change', findUniqueProfile);
+        // 4. Cambio en ESPESOR -> Busca el perfil único
+        // Asegúrate de borrar cualquier referencia a 'weightSelect.addEventListener' antigua
+        thicknessSelect.addEventListener('change', findUniqueProfile);
     
     
         // ==========================================

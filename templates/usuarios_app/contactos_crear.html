@@ -95,13 +95,10 @@
 
         <!-- BOTÓN GUARDAR -->
         <div class="mt-6 space-y-3">
-
-            {# 1. BOTÓN GUARDAR (Ya tenía w-full o lo hereda, pero lo aseguramos) #}
             <button type="submit"
                 class="w-full bg-[#002B5B] text-white font-bold py-2 px-4 rounded hover:bg-[#7CA8D5] transition duration-300">
                 Guardar Contacto
             </button>
-
             {# 2. BOTÓN CANCELAR (Ahora es un elemento de bloque w-full) #}
             <a href="{% url 'detalle_cliente' cliente.id %}"
                 class="w-full text-center block bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded hover:bg-gray-400 transition duration-300">
