@@ -73,25 +73,25 @@ class ProfileViewSet(viewsets.ModelViewSet):
         category = request.query_params.get('category')
         altura = request.query_params.get('attributes__ALTURA_d')
         ancho = request.query_params.get('attributes__ANCHURA_bf')
-        peso = request.query_params.get('attributes__PESO_KG_M')
-
+        tf = request.query_params.get('attributes__DIMENSION_tf')
+        tw = request.query_params.get('attributes__DIMENSION_tw')
         # 2. Si falta algún dato, no buscamos nada
-        if not all([category, altura, ancho, peso]):
+        if not all([category, altura, ancho, tf, tw]):
             return Response(None)
 
         try:
             # 3. CONVERSIÓN DE TIPOS (La parte crítica)
             # Django recibe "1000" (str) pero el JSON tiene 1000 (int). Debemos convertir.
             
+            def smart_convert(val):
+                f = float(val)
+                return int(f) if f.is_integer() else f
+            
             # Convertimos a float primero para manejar strings como "1000.0"
-            altura_val = float(altura)
-            ancho_val = float(ancho)
-            peso_val = float(peso)
-
-            # Si es un número entero (ej: 1000.0), lo pasamos a int (1000)
-            # Esto es vital porque en el JSON: 1000 != 1000.0 en búsquedas exactas a veces
-            if altura_val.is_integer(): altura_val = int(altura_val)
-            if ancho_val.is_integer(): ancho_val = int(ancho_val)
+            altura_val = smart_convert(altura)
+            ancho_val = smart_convert(ancho)
+            tf_val = smart_convert(tf)
+            tw_val = smart_convert(tw)
             
             # 4. Query Segura
             # Usamos filter().first() en lugar de get().
@@ -100,7 +100,8 @@ class ProfileViewSet(viewsets.ModelViewSet):
                 category=category,
                 attributes__ALTURA_d=altura_val,
                 attributes__ANCHURA_bf=ancho_val,
-                attributes__PESO_KG_M=peso_val
+                attributes__DIMENSION_tf=tf_val,
+                attributes__DIMENSION_tw=tw_val
             ).first()
 
             if profile:
@@ -116,3 +117,49 @@ class ProfileViewSet(viewsets.ModelViewSet):
         except Exception as e:
             print(f"Error inesperado en find_unique: {e}")
             return Response(None)
+        
+    @action(detail=False, methods=['get'], url_path='get-thickness-combinations')
+    def get_thickness_combinations(self, request):
+        """
+        Devuelve las combinaciones únicas de espesores (Ala/Alma) 
+        para los filtros seleccionados.
+        """
+        cat = request.query_params.get('category')
+        h = request.query_params.get('height')
+        w = request.query_params.get('width')
+        
+        # --- CORRECCIÓN: Conversión de Tipos (Str -> Int/Float) ---
+        try:
+            # Convertimos a float y luego a int si es entero, igual que en find_unique
+            if h:
+                h = float(h)
+                if h.is_integer(): h = int(h)
+            
+            if w:
+                w = float(w)
+                if w.is_integer(): w = int(w)
+        except (ValueError, TypeError):
+            # Si fallan los datos, devolvemos lista vacía
+            return Response([])
+
+        # Filtramos con los datos ya convertidos
+        qs = Profile.objects.filter(
+            category=cat,
+            attributes__ALTURA_d=h,
+            attributes__ANCHURA_bf=w
+        ).values('attributes__DIMENSION_tf', 'attributes__DIMENSION_tw').distinct()
+        
+        # Formateamos
+        data = []
+        for item in qs:
+            data.append({
+                'tf': item['attributes__DIMENSION_tf'], # Ala
+                'tw': item['attributes__DIMENSION_tw']  # Alma
+            })
+            
+        # Ordenamos por espesor de ala (mayor a menor)
+        data.sort(key=lambda x: x['tf'] if x['tf'] is not None else 0, reverse=True)
+        
+        return Response(data)
+        
+    
