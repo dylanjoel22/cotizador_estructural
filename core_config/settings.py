@@ -24,8 +24,8 @@ SECRET_KEY = 'django-insecure-+26ncw7f97=%$d*=akh8%f(6%-=+p9q4+j$k0vw4ko09b!$8#%
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
-ALLOWED_HOSTS = []
+# SE MODIFICO PARA EL RAILWAY
+ALLOWED_HOSTS = ["*"]
 
 
 LOGIN_URL = '/' # Redirige a la página de login si no está autenticado
@@ -49,9 +49,12 @@ INSTALLED_APPS = [
     'cotizador_app',
     'profiles_api',
     'login_app',
+    'corsheaders', # RAILWAY
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware', # RAILWAY
+    'django.middleware.common.CommonMiddleware', #RAILWAY
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -148,3 +151,5 @@ DJANGO_VITE = {
         "dev_mode": DEBUG
     }
 }
+
+CORS_ALLOW_ALL_ORIGINS = True # RAILWAY
