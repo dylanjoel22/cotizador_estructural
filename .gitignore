@@ -1,5 +1,5 @@
 # Ignorar carpetas de dependencias
-frontend/node_modules/
+# frontend/node_modules/
 venv/
 
 # Ignorar archivos de Python
@@ -7,7 +7,7 @@ __pycache__/
 *.pyc
 
 # Ignorar archivos de base de datos
-db.sqlite3
+# db.sqlite3
 
 # Ignorar archivos de logs y caché
 npm-debug.log*

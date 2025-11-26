@@ -148,7 +148,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Configuración de Vite
 DJANGO_VITE = {
     "default": {
-        "dev_mode": DEBUG
+        "dev_mode": False,
+        "static_url_prefix": "static/" 
     }
 }
 
