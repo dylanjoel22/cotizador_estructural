@@ -157,5 +157,5 @@ DJANGO_VITE = {
 CORS_ALLOW_ALL_ORIGINS = True # RAILWAY
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://cotizadorestructural-production.up.railway.app',
+    'https://cotizador.up.railway.app',
 ]
