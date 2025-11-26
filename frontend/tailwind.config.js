@@ -1,10 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    // Subir un nivel para encontrar la carpeta 'templates'
     '../templates/**/*.html',
-    // Buscar dentro de la carpeta 'src'
-    './src/**/*.{js,jsx}',
+    './src/**/*.{js,jsx,vue}',
   ],
   theme: {
     extend: {},
