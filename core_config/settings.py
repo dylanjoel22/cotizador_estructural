@@ -155,3 +155,8 @@ DJANGO_VITE = {
 }
 
 CORS_ALLOW_ALL_ORIGINS = True # RAILWAY
+
+CSRF_TRUSTED_ORIGINS = [
+    # Esta es la URL de tu backend (la que sale en el error)
+    'https://cotizadorestructural-production.up.railway.app',
+]
