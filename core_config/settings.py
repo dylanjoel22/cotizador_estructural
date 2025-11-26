@@ -149,7 +149,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 DJANGO_VITE = {
     "default": {
         "dev_mode": False,
-        "static_url_prefix": "static/" 
+        "manifest_path": BASE_DIR / "assets/django-assets/manifest.json", # Forzamos la ruta exacta
+        "static_url_prefix": "", # <--- ESTO ES LA CLAVE (Déjalo vacío)
     }
 }
 
