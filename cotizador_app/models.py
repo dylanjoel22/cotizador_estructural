@@ -116,52 +116,190 @@ class Cotizacion(models.Model):
         return materials_total + overhead_total
 
 
+class SeccionMaterial(models.Model):
+    """
+    Representa una sección o agrupación de materiales dentro de una cotización.
+    
+    Permite organizar materiales por estructura (ej: "Baño 1", "Habitación Principal", "Techo Galpón").
+    Cada cotización puede tener múltiples secciones para mejorar claridad y organización.
+    """
+    cotizacion = models.ForeignKey(
+        Cotizacion,
+        on_delete=models.CASCADE,
+        related_name='secciones',
+        verbose_name="Cotización"
+    )
+    
+    nombre = models.CharField(
+        max_length=200,
+        verbose_name="Nombre de la Sección",
+        help_text="Ej: 'Baño 1', 'Estructura Techo', 'Habitación Principal'"
+    )
+    
+    orden = models.IntegerField(
+        default=0,
+        verbose_name="Orden de Visualización",
+        help_text="Orden en que aparece la sección (menor = primero)"
+    )
+    
+    # Controla si la sección está colapsada en la UI
+    colapsada = models.BooleanField(
+        default=False,
+        verbose_name="Colapsada"
+    )
+    
+    fecha_creacion = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Fecha de Creación"
+    )
+    
+    class Meta:
+        verbose_name = "Sección de Materiales"
+        verbose_name_plural = "Secciones de Materiales"
+        ordering = ['orden', 'id']
+        # Evitar secciones duplicadas por nombre en la misma cotización
+        unique_together = [['cotizacion', 'nombre']]
+    
+    def __str__(self):
+        return f"{self.nombre} - Cotización #{self.cotizacion.id}"
+    
+    @property
+    def subtotal_costo(self):
+        """Calcula el costo total de todos los materiales en esta sección."""
+        return sum(
+            material.total_value 
+            for material in self.materiales.all()
+        )
+    
+    @property
+    def subtotal_peso(self):
+        """Calcula el peso total de todos los materiales en esta sección."""
+        return sum(
+            material.total_weight
+            for material in self.materiales.all()
+        )
+
+
 class MaterialEstructural(models.Model):
     """
     Representa un ítem de material estructural dentro de una cotización.
     
     Ejemplos: Vigas H, Perfiles L, Planchas de acero, etc.
-    Cada ítem pertenece a una cotización específica.
+    Cada ítem pertenece a una cotización específica y opcionalmente a una sección.
     """
     # on_delete=CASCADE: Si borramos la cotización, borramos todos sus materiales
-    # Esto tiene sentido porque un material no puede existir sin su cotización padre
     cotizacion = models.ForeignKey(
         Cotizacion, 
         on_delete=models.CASCADE, 
-        related_name='materiales_estructurales'
+        related_name='materiales_estructurales',
+        verbose_name="Cotización"
+    )
+    
+    # Relación opcional con sección (null=True permite materiales sin sección asignada)
+    seccion = models.ForeignKey(
+        'SeccionMaterial',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='materiales',
+        verbose_name="Sección",
+        help_text="Sección a la que pertenece este material (opcional)"
+    )
+    
+    # ID del perfil en la API (para referencia)
+    profile_id = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name="ID Perfil API"
     )
     
     # === Identificación del Material ===
-    material_nombre = models.CharField(max_length=150)
+    material_nombre = models.CharField(
+        max_length=150,
+        verbose_name="Material"
+    )
     
-    # === Dimensiones ===
-    # Guardamos en mm Y en metros para facilitar diferentes cálculos
-    largo_mm = models.IntegerField(default=0)
-    largo_m = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
+    # === Largo Requerido ===
+    largo_m = models.DecimalField(
+        max_digits=8, 
+        decimal_places=2, 
+        default=0.00,
+        verbose_name="Largo (m)"
+    )
     
-    # === Cantidades ===
-    # unidad_comercial: La unidad en que se vende (ej: 6 metros por barra)
-    unidad_comercial = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
-    cant_necesaria = models.IntegerField(default=1)
-    cant_a_comprar = models.IntegerField(default=1)  # Puede ser mayor por redondeo comercial
+    # === Unidad Comercial ===
+    # Número de barras comerciales (largo_m / 6)
+    unidad_comercial = models.DecimalField(
+        max_digits=8, 
+        decimal_places=2, 
+        default=0.00,
+        verbose_name="U. Comercial",
+        help_text="Largo requerido / 6 metros por barra"
+    )
     
-    # === Costos y Peso ===
-    valor_unitario = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    peso_kg_m = models.DecimalField(max_digits=8, decimal_places=3, default=0.000)
-
+    # === Cantidad Necesaria ===
+    # Redondeo hacia arriba de unidad_comercial
+    cant_necesaria = models.IntegerField(
+        default=1,
+        verbose_name="C. Necesaria",
+        help_text="Unidad comercial redondeada hacia arriba"
+    )
+    
+    # === Cantidad a Comprar ===
+    # cant_necesaria * 1.25 redondeado hacia arriba (margen de seguridad)
+    cant_a_comprar = models.IntegerField(
+        default=1,
+        verbose_name="A Comprar",
+        help_text="Cantidad necesaria × 1.25 (redondeado arriba)"
+    )
+    
+    # === Peso ===
+    peso_kg_m = models.DecimalField(
+        max_digits=8, 
+        decimal_places=3, 
+        default=0.000,
+        verbose_name="Peso (kg/m)"
+    )
+    
+    # === Valores ===
+    # Valor por METRO (no por barra)
+    valor_unitario_m = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=0.00,
+        verbose_name="Valor Unit. ($/m)"
+    )
+    
     class Meta:
         verbose_name = "Material Estructural"
         verbose_name_plural = "Materiales Estructurales"
+        ordering = ['seccion__orden', 'id']
+    
+    def __str__(self):
+        seccion_nombre = self.seccion.nombre if self.seccion else "Sin sección"
+        return f"{self.material_nombre} - {seccion_nombre}"
+    
+    @property
+    def peso_total(self):
+        """
+        Calcula el peso total basado en el LARGO REQUERIDO.
+        Esto es para informar al transportista cuánto peso llevar a terreno.
+        """
+        return float(self.peso_kg_m) * float(self.largo_m)
     
     @property
     def total_value(self):
-        """Calcula el valor total de este ítem."""
-        return self.cant_a_comprar * self.valor_unitario
+        """
+        Calcula el valor total a facturar.
+        Se basa en la cantidad A COMPRAR (incluye margen 25%).
+        """
+        metros_totales_a_comprar = self.cant_a_comprar * 6  # 6 metros por barra
+        return float(self.valor_unitario_m) * metros_totales_a_comprar
     
     @property
     def total_weight(self):
-        """Calcula el peso total en kilogramos."""
-        return self.cant_a_comprar * self.unidad_comercial * self.peso_kg_m
+        """Alias de peso_total para compatibilidad."""
+        return self.peso_total
 
 
 class CostoAdicional(models.Model):

@@ -62,8 +62,9 @@ class ProfileViewSet(viewsets.ModelViewSet):
             {
                 "id": profile.id,
                 "text": f"{profile.name} | {profile.attributes.get('ALTURA_d', 'N/A')}x"
-                        f"{profile.attributes.get('ANCHURA_bf', 'N/A')} mm | "
-                        f"{profile.attributes.get('PESO_KG_M', 'N/A')} kg/m"
+                        f"{profile.attributes.get('ANCHURA_bf', 'N/A')} mm",
+                "tf": profile.attributes.get('DIMENSION_tf'),
+                "tw": profile.attributes.get('DIMENSION_tw')
             }
             for profile in profiles
         ]
