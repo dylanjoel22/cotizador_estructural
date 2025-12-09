@@ -25,8 +25,9 @@ urlpatterns = [
 ]
 
 # ✅ Django Debug Toolbar - Solo en modo DEBUG
-if settings.DEBUG:
-    import debug_toolbar
-    urlpatterns = [
-        path('__debug__/', include(debug_toolbar.urls)),
-    ] + urlpatterns
+# DESHABILITADO TEMPORALMENTE - causa conflictos
+# if settings.DEBUG:
+#     import debug_toolbar
+#     urlpatterns = [
+#         path('__debug__/', include(debug_toolbar.urls)),
+#     ] + urlpatterns

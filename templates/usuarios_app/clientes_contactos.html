@@ -4,38 +4,40 @@
 {% block content %}
 
 <h2 class="text-3xl font-bold mb-6 text-blue-900">{{ cliente.nombre }}</h2>
-    
-    <div class="mb-8 p-6 bg-white shadow rounded-lg">
-        <h3 class="text-xl font-semibold mb-4 border-b pb-2">Información de la Empresa</h3>
-        <p><strong>Código:</strong> {{ cliente.codigo_cliente }}</p>
-        <p><strong>Ciudad:</strong> {{ cliente.ciudad }}</p>
-        <p><strong>Teléfono principal:</strong> {{ cliente.telefono }}</p>
-    </div>
 
-    
-    <a class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg shadow" href="{% url 'añadir_persona_contacto' cliente.id %}">+ Agregar Contacto</a>
-    <a class="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg shadow" href="{% url 'clientes' %}">Volver</a>
-    
+<div class="mb-8 p-6 bg-white shadow rounded-lg">
+    <h3 class="text-xl font-semibold mb-4 border-b pb-2">Información de la Empresa</h3>
+    <p><strong>Código:</strong> {{ cliente.codigo_cliente }}</p>
+    <p><strong>Ciudad:</strong> {{ cliente.ciudad }}</p>
+    <p><strong>Teléfono principal:</strong> {{ cliente.telefono }}</p>
+</div>
 
-    <div class="bg-white shadow rounded-lg mt-8">
-        <h3 class="text-xl font-semibold p-6 bg-gray-100 border-b">
-            Personas de Contacto ({{ contactos|length }})
-        </h3>
-        
-        {% if contactos %}
-            <ul class="divide-y divide-gray-200">
-                {% for contacto in contactos %}
-                    <li class="p-4 hover:bg-gray-50 transition duration-100">
-                        <div class="font-bold text-gray-800">{{ contactos.nombre }}</div>
-                        <div class="text-sm text-gray-600">
-                            Email: {{ contacto.email }} | Teléfono: {{ contacto.telefono }}
-                        </div>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="p-6 text-gray-500">No hay personas de contacto registradas para esta empresa.</p>
-        {% endif %}
-    </div>
+
+<a class="bg-blue-600 font-bold hover:bg-blue-700 text-white py-2 px-4 rounded-lg shadow"
+    href="{% url 'añadir_persona_contacto' cliente.id %}">+ Agregar Contacto</a>
+<a class="bg-gray-300 font-bold hover:bg-gray-400 text-black py-2 px-4 rounded-lg shadow"
+    href="{% url 'clientes' %}">Volver</a>
+
+
+<div class="bg-white shadow rounded-lg mt-8">
+    <h3 class="text-xl font-semibold p-6 bg-gray-100 border-b">
+        Personas de Contacto ({{ contactos|length }})
+    </h3>
+
+    {% if contactos %}
+    <ul class="divide-y divide-gray-200">
+        {% for contacto in contactos %}
+        <li class="p-4 hover:bg-gray-50 transition duration-100">
+            <div class="font-bold text-gray-800">{{ contactos.nombre }}</div>
+            <div class="text-sm text-gray-600">
+                Email: {{ contacto.email }} | Teléfono: {{ contacto.telefono }}
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="p-6 text-gray-500">No hay personas de contacto registradas para esta empresa.</p>
+    {% endif %}
+</div>
 
 {% endblock %}

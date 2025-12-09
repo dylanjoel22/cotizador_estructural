@@ -13,22 +13,22 @@
         Complete el siguiente formulario para agregar una nueva persona de contacto asociada a un cliente.
     </p>
 
-    <form method="POST" >
+    <form method="POST">
         {% csrf_token %}
 
         {# 💥 BLOQUE DE DEBUGGING OBLIGATORIO 💥 #}
-    {% if form.errors %}
+        {% if form.errors %}
         <div class="p-4 mb-4 bg-red-100 border border-red-400 rounded-lg text-red-800">
             <h3 class="font-bold">¡Error de Validación!</h3>
             <p class="text-sm">El formulario no se guardó debido a:</p>
-            
+
             {# Muestra errores no asociados a un campo (si los hay) #}
             {% if form.non_field_errors %}
-                <ul class="list-disc list-inside mt-2">
-                    {% for error in form.non_field_errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
+            <ul class="list-disc list-inside mt-2">
+                {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
             {% endif %}
 
             {# Muestra TODOS los errores de campos, incluso los que ya se muestran en el loop #}
@@ -36,14 +36,14 @@
             <details class="mt-2 text-xs">
                 <summary>Ver lista completa de errores por campo</summary>
                 {% for field in form %}
-                    {% if field.errors %}
-                        <p class="mt-1"><strong>{{ field.label }}:</strong> {{ field.errors }}</p>
-                    {% endif %}
+                {% if field.errors %}
+                <p class="mt-1"><strong>{{ field.label }}:</strong> {{ field.errors }}</p>
+                {% endif %}
                 {% endfor %}
             </details>
         </div>
-    {% endif %}
-    {# 💥 FIN BLOQUE DE DEBUGGING 💥 #}
+        {% endif %}
+        {# 💥 FIN BLOQUE DE DEBUGGING 💥 #}
 
         <div class="space-y-6">
 
@@ -96,12 +96,12 @@
         <!-- BOTÓN GUARDAR -->
         <div class="mt-6 space-y-3">
             <button type="submit"
-                class="w-full bg-[#002B5B] text-white font-bold py-2 px-4 rounded hover:bg-[#7CA8D5] transition duration-300">
+                class="w-full bg-[#002B5B] text-white font-bold py-2 px-4 rounded hover:bg-blue-700 transition duration-300">
                 Guardar Contacto
             </button>
             {# 2. BOTÓN CANCELAR (Ahora es un elemento de bloque w-full) #}
             <a href="{% url 'detalle_cliente' cliente.id %}"
-                class="w-full text-center block bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded hover:bg-gray-400 transition duration-300">
+                class="w-full text-center block bg-red-600 text-white font-bold py-2 px-4 rounded hover:bg-red-700 transition duration-300">
                 Cancelar
             </a>
         </div>

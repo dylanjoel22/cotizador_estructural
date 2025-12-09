@@ -12,7 +12,8 @@
 
 <!-- Botón para añadir cliente -->
 <a href="{% url 'añadir_cliente' %}" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg shadow">
-    + Añadir Cliente
+    <i class="fas fa-plus"></i>
+    <span class="ml-3">Añadir Cliente</span>
 </a>
 
 <!-- Tabla de clientes -->
@@ -25,7 +26,8 @@
                 <th class="px-3 py-3 text-xs font-semibold uppercase tracking-wider w-16 text-center">ID</th>
                 <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider min-w-[250px]">Nombre</th>
                 <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider w-32">Rut</th>
-                <th class="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider w-32">Código Cliente</th>
+                <th class="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider w-32">Código Cliente
+                </th>
                 <th class="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider w-32">Ciudad</th>
                 <th class="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider w-32">Telefono</th>
                 <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider w-32">Fecha de registro
@@ -36,7 +38,7 @@
         <tbody class="bg-white divide-y divide-gray-100">
             {% for cliente in clientes %}
             <tr class="hover:bg-blue-50/50 transition duration-100 relative group">
-                <td class="px-3 py-2 whitespace-nowrap text-sm font-semibold text-center">{{cliente.id}}</td >
+                <td class="px-3 py-2 whitespace-nowrap text-sm font-semibold text-center">{{cliente.id}}</td>
                 <td class="px-3 py-2 whitespace-nowrap text-sm font-semibold">
 
                     {# Enlace principal que se estirará sobre TODA la fila #}
@@ -51,7 +53,8 @@
 
                 {# 2. El resto de las celdas de datos (no necesitan cambios) #}
                 <td>{{ cliente.rut }}</td>
-                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700 text-center">{{ cliente.codigo_cliente }}</td>
+                <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700 text-center">{{ cliente.codigo_cliente }}
+                </td>
                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700 text-center">{{ cliente.ciudad }}</td>
                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700 text-right">{{ cliente.telefono }}</td>
                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700">{{ cliente.fecha_registro|date:"d/m/Y" }}

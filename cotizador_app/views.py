@@ -43,7 +43,10 @@ def cotizacion(request):
     cotizaciones = Cotizacion.objects.select_related('cliente')\
         .prefetch_related('materiales_estructurales', 'costos_adicionales')\
         .order_by('-fecha_creacion')
-    return render(request, 'coti_app/cotizacion.html', {'cotizaciones': cotizaciones})
+    
+    return render(request, 'coti_app/cotizacion.html', {
+        'cotizaciones': cotizaciones,
+    })
 
 
 
@@ -95,7 +98,7 @@ def crear_cotizacion(request):
                     # Si llegamos aquí, todo salió bien. Redirigimos al listado
                     return redirect(reverse('cotizador_app:cotizaciones'))
 
-            except json.JSONDecodeError as e:
+            except JSONDecodeError as e:
                 logger.error(f"JSON inválido en cotización: {e}", exc_info=True)
                 error_message = "Error: La estructura de datos del formulario es inválida."
             except IntegrityError as e:
@@ -120,7 +123,7 @@ def crear_cotizacion(request):
     context = {
         'form': form,
         'error_message': error_message,
-        'clientes_disponibles': clientes_disponibles
+        'clientes_disponibles': clientes_disponibles,
     }
     
     return render(request, 'coti_app/crear_cotizacion.html', context)
@@ -145,12 +148,11 @@ def _create_structural_materials(cotizacion, items_data):
         MaterialEstructural(
             cotizacion=cotizacion,
             material_nombre=item.get('material_nombre', ''),
-            largo_mm=item.get('largo_mm', 0),
             largo_m=item.get('largo_m', 0.0),
             unidad_comercial=item.get('unidad_comercial', 0.0),
             cant_necesaria=item.get('cant_necesaria', 1),
             cant_a_comprar=item.get('cant_a_comprar', 1),
-            valor_unitario=item.get('valor_unitario', 0.0),
+            valor_unitario_m=item.get('valor_unitario_m', 0.0),
             peso_kg_m=item.get('peso_kg_m', 0.0),
         )
         for item in items_data
@@ -509,4 +511,78 @@ def eliminar_cotizacion(request, cotizacion_id):
     # GET: mostramos confirmación
     return render(request, 'coti_app/eliminar_cotizacion.html', {
         'cotizacion': cotizacion
+    })
+
+
+# ========================================================================
+# API JSON ENDPOINTS - Para búsqueda y filtrado en tiempo real
+# ========================================================================
+
+@login_required
+def cotizacion_search_api(request):
+    """
+    Endpoint JSON para búsqueda y filtrado de cotizaciones.
+    
+    Parámetros GET:
+        q: Query de búsqueda (busca en proyecto_nombre y cliente__nombre)
+        carpeta: Filtro por carpeta específica
+        estado: Filtro por estado
+    
+    Returns:
+        JsonResponse con lista de cotizaciones filtradas
+    """
+    from django.http import JsonResponse
+    from django.db.models import Q
+    
+    # Obtenemos parámetros de búsqueda
+    search_query = request.GET.get('q', '').strip()
+    carpeta_filter = request.GET.get('carpeta', '').strip()
+    estado_filter = request.GET.get('estado', '').strip()
+    
+    # Query base optimizado
+    cotizaciones = Cotizacion.objects.select_related('cliente')\
+        .prefetch_related('materiales_estructurales', 'costos_adicionales')\
+        .order_by('-fecha_creacion')
+    
+    # Aplicar filtro de búsqueda (case-insensitive)
+    if search_query:
+        cotizaciones = cotizaciones.filter(
+            Q(proyecto_nombre__icontains=search_query) |
+            Q(cliente__nombre__icontains=search_query)
+        )
+    
+    # Filtrar por carpeta
+    if carpeta_filter:
+        if carpeta_filter == 'sin_carpeta':
+            cotizaciones = cotizaciones.filter(carpeta__isnull=True)
+        else:
+            # Filtrar por nombre de carpeta
+            cotizaciones = cotizaciones.filter(carpeta__nombre=carpeta_filter)
+    
+    # Filtrar por estado
+    if estado_filter:
+        cotizaciones = cotizaciones.filter(estado=estado_filter)
+    
+    # Serializar datos a JSON
+    data = []
+    for cot in cotizaciones:
+        data.append({
+            'id': cot.id,
+            'proyecto_nombre': cot.proyecto_nombre,
+            'fecha_creacion': cot.fecha_creacion.strftime('%d-%m-%Y'),
+            'total_costo': float(cot.total_costo),
+            'cliente_nombre': cot.cliente.nombre if cot.cliente else 'N/A',
+            'estado': cot.estado,
+            'estado_display': cot.get_estado_display(),
+            'carpeta_id': cot.carpeta.id if cot.carpeta else None,
+            'carpeta_nombre': cot.carpeta.nombre if cot.carpeta else 'Sin Carpeta',
+            # URLs para acciones
+            'url_detalle': reverse('cotizador_app:detalle_cotizacion'),
+            'url_pdf': reverse('cotizador_app:generar_pdf', args=[cot.id]),
+            'url_eliminar': reverse('cotizador_app:eliminar_cotizacion', args=[cot.id]),
+        })
+    
+    return JsonResponse({
+        'cotizaciones': data,
+        'count': len(data)
     })
