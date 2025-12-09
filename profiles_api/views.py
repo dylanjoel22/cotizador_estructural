@@ -8,6 +8,7 @@ con filtros avanzados y búsqueda por autocompletado.
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from .models import Profile
 from .serializers import ProfileSerializer
 
@@ -33,6 +34,8 @@ class ProfileViewSet(viewsets.ModelViewSet):
     """
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]  # ✅ FIX CRÍTICO-001
+
 
     @action(detail=False, methods=['get'], url_path='search')
     def search(self, request):

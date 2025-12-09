@@ -10,4 +10,4 @@ class ProfileSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Profile
-        fields = '__all__'  # Incluye name, category, y attributes
+        fields = ['id', 'name', 'category', 'attributes']  # ✅ FIX MEDIO-007: Explícito en lugar de '__all__'

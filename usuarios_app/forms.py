@@ -38,12 +38,13 @@ class PersonaContactoForm(forms.ModelForm):
     class Meta:
         model = PersonaContacto
         exclude = ['cliente']
-        fields = ['nombre', 'rut', 'email', 'telefono', 'cliente']
+        # CORRECCIÓN: Removido 'cliente' de fields ya que está en exclude
+        # No se puede usar exclude Y fields con el mismo campo
+        fields = ['nombre', 'rut', 'email', 'telefono']
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded-lg focus:ring-[#7CA8D5] focus:border-[#7CA8D5]'}),
             'rut': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded-lg focus:ring-[#7CA8D5] focus:border-[#7CA8D5]',
                                           'placeholder': 'Ejemplo: 12.345.678-K'}),
             'email': forms.EmailInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded-lg focus:ring-[#7CA8D5] focus:border-[#7CA8D5]'}),
             'telefono': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded-lg focus:ring-[#7CA8D5] focus:border-[#7CA8D5]'}),
-            'cliente': forms.Select(attrs={'class': 'w-full p-2 border border-gray-300 rounded-lg focus:ring-[#7CA8D5] focus:border-[#7CA8D5]'}),
         }

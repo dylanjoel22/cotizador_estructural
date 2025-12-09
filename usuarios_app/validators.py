@@ -64,12 +64,21 @@ def validar_rut_chileno(rut):
     # Ejemplo: 8*2 + 7*3 + 6*4 + 5*5 + 4*6 + 3*7 + 2*2 + 1*3
     total_sum = sum(digit * factor for digit, factor in zip(reversed_digits, factor_cycle))
     
-    # Calculamos el módulo 11 de forma que siempre sea positivo (0-10)
-    remainder = (-total_sum) % 11
+    # Calculamos el módulo 11 usando el algoritmo estándar chileno
+    # Primero calculamos el resto de dividir total_sum entre 11
+    # Luego restamos ese resto de 11
+    remainder = 11 - (total_sum % 11)
 
     # Paso 6: Convertir el resultado a dígito verificador
-    # Si el resto es 10, el DV es "K", de lo contrario es el número mismo
-    calculated_dv = "K" if remainder == 10 else str(remainder)
+    # Si el resto es 11, el DV es "0"
+    # Si el resto es 10, el DV es "K"
+    # De lo contrario, es el número mismo
+    if remainder == 11:
+        calculated_dv = "0"
+    elif remainder == 10:
+        calculated_dv = "K"
+    else:
+        calculated_dv = str(remainder)
 
     # Paso 7: Comparar el DV calculado con el que ingresó el usuario
     if user_dv != calculated_dv:

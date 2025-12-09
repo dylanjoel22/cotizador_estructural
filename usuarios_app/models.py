@@ -125,18 +125,19 @@ class PersonaContacto(models.Model):
     telefono = models.CharField(max_length=20, verbose_name="Número de Teléfono", validators=[validar_telefono])
     
     # === Foreign Key: La Relación con Cliente ===
-    # on_delete=models.CASCADE: Si borramos el Cliente, se borran TODAS sus PersonasContacto
-    # Esto es correcto porque una PersonaContacto no tiene sentido sin su Cliente
+    # ✅ FIX ALTO-005: on_delete=PROTECT evita borrado accidental de clientes con contactos
+    # Si intentas borrar un Cliente que tiene PersonasContacto, Django lanzará un error
+    # Esto es más seguro que CASCADE, que borra todos los contactos sin confirmación
     # 
     # Alternativas de on_delete:
+    # - CASCADE: Borraría automáticamente los contactos (PELIGROSO - evitado)
     # - SET_NULL: Pondría cliente=null si se borra el cliente (requiere null=True)
-    # - PROTECT: Evitaría borrar el cliente si tiene contactos asociados
     # - SET_DEFAULT: Asignaría un valor por defecto (requiere default=...)
     #
     # related_name='contactos': Permite hacer cliente.contactos.all() en vez de cliente.personacontacto_set.all()
     cliente = models.ForeignKey(
         Cliente, 
-        on_delete=models.CASCADE, 
+        on_delete=models.PROTECT,  # ✅ Cambiado de CASCADE a PROTECT
         related_name='contactos', 
         verbose_name="Empresa Asociada"
     )

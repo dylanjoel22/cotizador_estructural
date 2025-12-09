@@ -7,15 +7,20 @@ para clientes y sus contactos asociados.
 
 from django.shortcuts import render, redirect, reverse, get_object_or_404
 from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.db import transaction  # ✅ FIX MEDIO-005
 from .forms import ClienteForm, PersonaContactoForm
 from .models import Cliente, PersonaContacto
 
 
+
+@login_required
 def perfil(request):
     """Vista simple que renderiza el perfil del usuario actual."""
     return render(request, 'usuarios_app/perfil.html')
 
 
+@login_required
 def añadir_cliente(request):
     """
     Crea un nuevo cliente en el sistema.
@@ -49,6 +54,7 @@ def añadir_cliente(request):
     return render(request, 'usuarios_app/añadir_cliente.html', context)
 
 
+@login_required
 def clientes(request):
     """
     Lista todos los clientes registrados.
@@ -66,6 +72,7 @@ def clientes(request):
     return render(request, 'usuarios_app/clientes.html', context)
 
 
+@login_required
 def detalle_cliente(request, pk):
     """
     Muestra la información detallada de un cliente y sus contactos asociados.
@@ -80,9 +87,8 @@ def detalle_cliente(request, pk):
     # en vez de lanzar una excepción DoesNotExist
     cliente = get_object_or_404(Cliente, pk=pk)
     
-    # Filtramos contactos por la relación ForeignKey
-    # Alternativa equivalente: cliente.contactos.all() (usando related_name)
-    contactos = PersonaContacto.objects.filter(cliente=cliente)
+    # ✅ FIX MEDIO-001: Usar related_name es más idiomático en Django
+    contactos = cliente.contactos.all()
     
     context = {
         'cliente': cliente,
@@ -92,6 +98,8 @@ def detalle_cliente(request, pk):
     return render(request, 'usuarios_app/clientes_contactos.html', context)
 
 
+
+@login_required
 def añadir_persona_contacto(request, pk):
     """
     Crea una nueva persona de contacto para un cliente específico.
@@ -116,7 +124,9 @@ def añadir_persona_contacto(request, pk):
         form = PersonaContactoForm(request.POST, instance=new_contact)
         
         if form.is_valid():
-            form.save()
+            # ✅ FIX MEDIO-005: transaction.atomic para integridad futura
+            with transaction.atomic():
+                form.save()
             
             # Redirigimos de vuelta al detalle del cliente
             # Esto permite al usuario ver inmediatamente el contacto que acaba de crear
@@ -133,6 +143,8 @@ def añadir_persona_contacto(request, pk):
     return render(request, 'usuarios_app/contactos_crear.html', context)
 
 
+
+@login_required
 def get_contactos_por_empresa(request):
     """
     Endpoint AJAX que retorna los contactos de un cliente en formato JSON.
@@ -162,6 +174,7 @@ def get_contactos_por_empresa(request):
     return JsonResponse(list(contactos), safe=False)
 
 
+@login_required
 def get_clientes_json(request):
     """
     Endpoint AJAX que retorna todos los clientes activos en formato JSON.

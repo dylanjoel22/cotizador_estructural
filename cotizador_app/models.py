@@ -7,7 +7,12 @@ y costos adicionales del proyecto.
 
 from django.db import models
 from django.utils import timezone
+from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
+from decimal import Decimal
 from usuarios_app.models import Cliente
+from .constants import METROS_POR_BARRA  # ✅ FIX MEDIO-003
+
 
 
 class Cotizacion(models.Model):
@@ -163,6 +168,38 @@ class SeccionMaterial(models.Model):
     def __str__(self):
         return f"{self.nombre} - Cotización #{self.cotizacion.id}"
     
+    def clean(self):
+        """
+        Validación personalizada para SeccionMaterial.
+        
+        ✅ FIX MEDIO-002: Normaliza el nombre y valida duplicados case-insensitive.
+        """
+        super().clean()
+        
+        # Normalizar nombre (capitalizar cada palabra)
+        if self.nombre:
+            self.nombre = self.nombre.strip().title()
+        
+        # Verificar duplicados case-insensitive
+        duplicados = SeccionMaterial.objects.filter(
+            cotizacion=self.cotizacion,
+            nombre__iexact=self.nombre
+        )
+        
+        # Excluir la instancia actual si estamos editando
+        if self.pk:
+            duplicados = duplicados.exclude(pk=self.pk)
+        
+        if duplicados.exists():
+            raise ValidationError({
+                'nombre': f'Ya existe una sección con el nombre "{self.nombre}" en esta cotización.'
+            })
+    
+    def save(self, *args, **kwargs):
+        """Ejecuta validación automáticamente antes de guardar."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+    
     @property
     def subtotal_costo(self):
         """Calcula el costo total de todos los materiales en esta sección."""
@@ -210,12 +247,13 @@ class MaterialEstructural(models.Model):
     profile_id = models.IntegerField(
         null=True,
         blank=True,
+        db_index=True,  # ✅ FIX ALTO-006: Índice para búsquedas eficientes
         verbose_name="ID Perfil API"
     )
     
     # === Identificación del Material ===
     material_nombre = models.CharField(
-        max_length=150,
+        max_length=300,  # ✅ FIX CRÍTICO-004: Aumentado de 150 a 300 para nombres largos
         verbose_name="Material"
     )
     
@@ -292,8 +330,10 @@ class MaterialEstructural(models.Model):
         """
         Calcula el valor total a facturar.
         Se basa en la cantidad A COMPRAR (incluye margen 25%).
+        
+        ✅ FIX MEDIO-003: Usa constante METROS_POR_BARRA en lugar de magic number.
         """
-        metros_totales_a_comprar = self.cant_a_comprar * 6  # 6 metros por barra
+        metros_totales_a_comprar = self.cant_a_comprar * float(METROS_POR_BARRA)
         return float(self.valor_unitario_m) * metros_totales_a_comprar
     
     @property
@@ -320,7 +360,11 @@ class CostoAdicional(models.Model):
     
     # === Valores ===
     cantidad = models.DecimalField(max_digits=8, decimal_places=2, default=1.00)
-    valor_unitario = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    valor_unitario = models.DecimalField(
+        max_digits=12,  # ✅ FIX CRÍTICO-004: Aumentado de 10 a 12 para valores grandes
+        decimal_places=2,
+        default=0.00
+    )
 
     class Meta:
         verbose_name = "Costo Adicional"

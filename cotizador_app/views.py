@@ -4,11 +4,13 @@ Vistas para el sistema de Cotizaciones.
 Maneja la creación, visualización y generación de PDFs de cotizaciones.
 """
 
-import json
+from json import JSONDecodeError  # ✅ FIX BAJO-001: Import específico
+import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
@@ -19,23 +21,45 @@ from .forms import CotizacionForm
 from .models import Cotizacion, MaterialEstructural, CostoAdicional
 from usuarios_app.models import Cliente
 
+# Configurar logger para este módulo
+logger = logging.getLogger(__name__)
 
+
+
+@login_required
 def cotizacion(request):
     """
     Lista todas las cotizaciones ordenadas por fecha de creación.
     
     Las mostramos de más reciente a más antigua para que el usuario
     vea primero lo que acaba de crear.
+    
+    Optimización: Usamos select_related('cliente') para evitar N+1 queries
+    cuando el template acceda a cotizacion.cliente.nombre
+    
+    Optimización CRÍTICO-003: prefetch_related para materiales y costos
+    evita N+1 queries al acceder a calculated_total en el template
     """
-    cotizaciones = Cotizacion.objects.all().order_by('-fecha_creacion')
+    cotizaciones = Cotizacion.objects.select_related('cliente')\
+        .prefetch_related('materiales_estructurales', 'costos_adicionales')\
+        .order_by('-fecha_creacion')
     return render(request, 'coti_app/cotizacion.html', {'cotizaciones': cotizaciones})
 
 
+
+
+
+
+@login_required
 def detalle_cotizacion(request):
     """Vista de detalle de una cotización específica."""
     return render(request, 'coti_app/detalle_cotizacion.html')
 
 
+
+
+
+@login_required
 def crear_cotizacion(request):
     """
     Crea una nueva cotización con sus materiales y costos asociados.
@@ -44,6 +68,7 @@ def crear_cotizacion(request):
     correctamente o nada se guarde en caso de error (integridad de datos).
     """
     error_message = None
+
 
     if request.method == 'POST':
         form = CotizacionForm(request.POST)
@@ -70,10 +95,18 @@ def crear_cotizacion(request):
                     # Si llegamos aquí, todo salió bien. Redirigimos al listado
                     return redirect(reverse('cotizador_app:cotizaciones'))
 
-            except json.JSONDecodeError:
-                error_message = "Error: La estructura de datos JSON es inválida."
+            except json.JSONDecodeError as e:
+                logger.error(f"JSON inválido en cotización: {e}", exc_info=True)
+                error_message = "Error: La estructura de datos del formulario es inválida."
+            except IntegrityError as e:
+                logger.error(f"Error de integridad en BD al crear cotización: {e}", exc_info=True)
+                error_message = "No se pudo guardar la cotización. Verifique que los datos no estén duplicados."
+            except ValueError as e:
+                logger.error(f"Error de validación en cotización: {e}", exc_info=True)
+                error_message = "Datos inválidos en el formulario. Verifique los valores numéricos."
             except Exception as e:
-                error_message = f"Error al guardar la cotización: {str(e)}"
+                logger.critical(f"Error inesperado al crear cotización: {e}", exc_info=True)
+                error_message = "Ocurrió un error inesperado. Por favor, contacte al administrador."
         else:
             error_message = "Por favor, corrija los errores del formulario."
     else:
@@ -154,6 +187,8 @@ def _create_additional_costs(cotizacion, items_data):
 # GENERACIÓN DE PDF - Dividido en funciones pequeñas y reutilizables
 # ========================================================================
 
+
+@login_required
 def generar_pdf(request, cotizacion_id):
     """
     Genera un PDF profesional con los detalles de la cotización.
@@ -202,15 +237,33 @@ def generar_pdf(request, cotizacion_id):
     return response
 
 
+
 def _generate_pdf_filename(cotizacion):
     """
-    Genera un nombre de archivo descriptivo para el PDF.
+    Genera un nombre de archivo descriptivo y seguro para el PDF.
+    
+    Sanitiza el nombre del proyecto para prevenir path traversal y
+    caracteres problemáticos en sistemas de archivos.
     
     Ejemplo: "cotizacion_Proyecto_Edificio_ABC_123.pdf"
     """
-    # Reemplazamos espacios por guiones bajos para evitar problemas en URLs
-    safe_project_name = cotizacion.proyecto_nombre.replace(' ', '_')
+    import re
+    
+    # Eliminar caracteres peligrosos, permitir solo alfanuméricos, espacios, guiones y guiones bajos
+    safe_project_name = re.sub(r'[^a-zA-Z0-9\s\-_]', '', cotizacion.proyecto_nombre)
+    
+    # Limitar largo para evitar nombres de archivo excesivamente largos
+    safe_project_name = safe_project_name[:50].strip()
+    
+    # Reemplazar espacios por guiones bajos
+    safe_project_name = safe_project_name.replace(' ', '_')
+    
+    # Si después de sanitizar quedó vacío, usar un nombre por defecto
+    if not safe_project_name:
+        safe_project_name = "sin_nombre"
+    
     return f"cotizacion_{safe_project_name}_{cotizacion.id}.pdf"
+
 
 
 def _build_header_section(story, cotizacion, styles):
@@ -433,6 +486,9 @@ def _create_styled_table(data, col_widths, subtotal_span):
     return table
 
 
+
+
+@login_required
 def eliminar_cotizacion(request, cotizacion_id):
     """
     Elimina una cotización después de confirmación del usuario.
@@ -442,6 +498,7 @@ def eliminar_cotizacion(request, cotizacion_id):
     - POST: Ejecuta la eliminación
     """
     cotizacion = get_object_or_404(Cotizacion, id=cotizacion_id)
+
 
     if request.method == "POST":
         # Usuario confirmó: borramos

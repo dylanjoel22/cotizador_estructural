@@ -1,6 +1,7 @@
 
 from django.contrib import admin
-from django.urls import path,include
+from django.urls import path, include
+from django.conf import settings
 
 urlpatterns = [
 
@@ -22,3 +23,10 @@ urlpatterns = [
     #Ruta de la API de perfiles
     path('api/', include('profiles_api.urls')),
 ]
+
+# ✅ Django Debug Toolbar - Solo en modo DEBUG
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns = [
+        path('__debug__/', include(debug_toolbar.urls)),
+    ] + urlpatterns
