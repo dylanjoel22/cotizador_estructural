@@ -18,10 +18,10 @@ Nunca trabajes directamente en la rama `main`. Crea una nueva rama para cada fun
 1.  Crea y cambia a tu nueva rama.
 
     ```bash
-    git checkout -b feat/nombre-de-la-tarea
+    git checkout -b nombre-de-la-tarea
     ```
 
-    *Ejemplo: `git checkout -b fix/problema-con-botones`*
+    *Ejemplo: `git checkout -b problema-con-botones`*
 
 ### Paso 3: Trabajar y guardar tus cambios
 
@@ -36,7 +36,7 @@ Una vez que termines de programar, guarda tus cambios en la rama local.
 2.  Crea un "commit" con un mensaje claro y conciso.
 
     ```bash
-    git commit -m "feat: [Descripción breve de lo que hiciste]"
+    git commit -m "[Descripción breve de lo que hiciste]"
     ```
 
 ### Paso 4: Subir la rama a GitHub y crear una Pull Request (PR)
@@ -46,7 +46,7 @@ Sube tu rama al repositorio remoto y solicita que se revise tu código.
 1.  Sube tu rama.
 
     ```bash
-    git push -u origin feat/nombre-de-la-tarea
+    git push -u origin nombre-de-la-tarea
     ```
 
 2.  Ve a GitHub, encuentra la rama que acabas de subir y crea una **Pull Request** (`PR`).

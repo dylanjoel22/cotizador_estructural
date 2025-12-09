@@ -27,6 +27,12 @@ DEBUG = True
 # SE MODIFICO PARA EL RAILWAY
 ALLOWED_HOSTS = ["*"]
 
+# ✅ Django Debug Toolbar - IPs permitidas para ver la toolbar
+INTERNAL_IPS = [
+    '127.0.0.1',
+    'localhost',
+]
+
 
 LOGIN_URL = '/' # Redirige a la página de login si no está autenticado
 LOGIN_REDIRECT_URL = '/home/' # Redirige a esta página después de iniciar sesión
@@ -41,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'debug_toolbar',  # ✅ Django Debug Toolbar (solo desarrollo)
     'widget_tweaks',
     'django_vite',
     'rest_framework',
@@ -55,6 +62,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware', # RAILWAY
     'django.middleware.common.CommonMiddleware', #RAILWAY
+    'debug_toolbar.middleware.DebugToolbarMiddleware',  # ✅ Debug Toolbar (debe estar temprano)
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
