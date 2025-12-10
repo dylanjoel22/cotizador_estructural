@@ -1,24 +1,25 @@
 # nixpacks.toml
 
 [phases.setup]
-# Instalar Python (incluye pip), Node.js, y PostgreSQL
 nixPkgs = ["python312", "nodejs_20", "postgresql"]
 
+# Añadir dependencias APT para Weasyprint (la fuente principal de problemas nativos)
+apt = ["libpango-1.0-0", "libpangocairo-1.0-0", "libgdk-pixbuf2.0-0", "libffi-dev", "libcairo2-dev", "libcups2-dev"]
+
+
 [phases.install]
-# Instalar dependencias de Python y Node
+# **MANTENER ESTA CORRECCIÓN**
 cmds = [
-    # **CORRECCIÓN:** Usar "python -m pip" para resolver "pip: command not found"
-    "python -m pip install -r requirements.txt", 
+    "python -m pip install -r requirements.txt",
     "npm install --prefix frontend"
 ]
 
 [phases.build]
-# Construir el frontend si es necesario
 cmds = [
     "npm run build --prefix frontend",
     "python manage.py collectstatic --noinput"
 ]
 
 [start]
-# Iniciar Django con gunicorn
 cmd = "gunicorn core_config.wsgi:application --bind 0.0.0.0:8000"
+
