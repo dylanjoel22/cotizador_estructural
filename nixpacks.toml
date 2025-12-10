@@ -2,15 +2,17 @@
 
 [phases.setup]
 nixPkgs = ["python312", "nodejs_20", "postgresql"]
-
-# Añadir dependencias APT para Weasyprint (la fuente principal de problemas nativos)
+# Dependencias APT para Weasyprint (ya que tu requirements.txt las requiere)
 apt = ["libpango-1.0-0", "libpangocairo-1.0-0", "libgdk-pixbuf2.0-0", "libffi-dev", "libcairo2-dev", "libcups2-dev"]
+
+# **AÑADIR ESTO:** Fuerza a Python a instalar/actualizar pip y wheel inmediatamente
+cmds = ["python -m ensurepip --upgrade", "python -m pip install wheel"]
 
 
 [phases.install]
-# **MANTENER ESTA CORRECCIÓN**
+# La corrección que ya funciona para invocar a pip
 cmds = [
-    "python -m pip install -r requirements.txt",
+    "python -m pip install -r requirements.txt", 
     "npm install --prefix frontend"
 ]
 
