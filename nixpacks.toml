@@ -2,26 +2,33 @@
 
 [phases.setup]
 nixPkgs = ["python312", "nodejs_20", "postgresql"]
-# Dependencias APT para Weasyprint (ya que tu requirements.txt las requiere)
+# Dependencias APT para Weasyprint (si aún son necesarias)
 apt = ["libpango-1.0-0", "libpangocairo-1.0-0", "libgdk-pixbuf2.0-0", "libffi-dev", "libcairo2-dev", "libcups2-dev"]
 
-# **AÑADIR ESTO:** Fuerza a Python a instalar/actualizar pip y wheel inmediatamente
-cmds = ["python -m ensurepip --upgrade", "python -m pip install wheel"]
+# Eliminar 'cmds' de setup. El error era intentar modificar el sistema.
 
 
 [phases.install]
-# La corrección que ya funciona para invocar a pip
+# **NUEVOS COMANDOS:** Creamos y usamos un entorno virtual para la instalación
 cmds = [
-    "python -m pip install -r requirements.txt", 
+    # 1. Crear el entorno virtual
+    "python -m venv .venv", 
+    # 2. Activar el entorno virtual e instalar/actualizar pip y wheel
+    ". .venv/bin/activate && pip install --upgrade pip wheel",
+    # 3. Instalar las dependencias de la app usando el pip del venv
+    ". .venv/bin/activate && pip install -r requirements.txt", 
+    
+    # 4. Dependencias de Node.js (se mantienen)
     "npm install --prefix frontend"
 ]
 
 [phases.build]
 cmds = [
-    "npm run build --prefix frontend",
-    "python manage.py collectstatic --noinput"
+    # 5. Usamos el python del venv para collectstatic
+    ". .venv/bin/activate && npm run build --prefix frontend",
+    ". .venv/bin/activate && python manage.py collectstatic --noinput"
 ]
 
 [start]
-cmd = "gunicorn core_config.wsgi:application --bind 0.0.0.0:8000"
-
+# 6. Usamos el python del venv para el comando de inicio (gunicorn)
+cmd = ". .venv/bin/activate && gunicorn core_config.wsgi:application --bind 0.0.0.0:8000"
