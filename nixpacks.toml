@@ -1,0 +1,25 @@
+# nixpacks.toml
+
+# 1. Instalar Python y Node.js (y librerías de PostgreSQL por si acaso)
+[phases.setup]
+nixPkgs = ["python311", "nodejs_20", "postgresql"]
+
+# 2. Configurar el orden de construcción
+[phases.build]
+cmds = [
+    # Instalar dependencias de Python
+    "pip install -r requirements.txt",
+    
+    # Entrar a la carpeta frontend, instalar Node, construir estilos y volver atrás
+    "cd frontend && npm install && npm run build && cd ..",
+    
+    # Recolectar archivos estáticos (CSS/JS generados) para que Django los vea
+    "python manage.py collectstatic --noinput",
+    
+    # (Opcional) Correr migraciones automáticamente al desplegar
+    "python manage.py migrate"
+]
+
+# 3. Comando de inicio del servidor
+[start]
+cmd = "gunicorn core_config.wsgi:application"
