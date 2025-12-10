@@ -2,7 +2,7 @@
 
 [phases.setup]
 # Instalar Python, pip, Node.js y PostgreSQL
-nixPkgs = ["python312", "pip", "nodejs_20", "postgresql"]
+nixPkgs = ["python312", "nodejs_20", "postgresql"]
 
 [phases.install]
 # Instalar dependencias de Python y Node
@@ -21,3 +21,4 @@ cmds = [
 [start]
 # Iniciar Django con gunicorn
 cmd = "gunicorn core_config.wsgi:application --bind 0.0.0.0:8000"
+
