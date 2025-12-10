@@ -1,57 +1,134 @@
 {% extends 'base.html' %}
-{% block page_title %}Cotizaciones{% endblock %}
+{% block page_title %}Dashboard de Cotizaciones{% endblock %}
 {% block content %}
 
-<div class="flex space-x-2">
-    <a class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg shadow" href="{% url 'cotizador_app:crear_cotizacion' %}">
-        <i class="fas fa-plus"></i>
-        <span class="ml-3">Crear Nueva Cotización</span>
+<!-- Header Section -->
+<div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <a class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-lg shadow-lg transition duration-200 inline-flex items-center justify-center"
+        href="{% url 'cotizador_app:crear_cotizacion' %}">
+        <i class="fas fa-plus mr-2"></i>
+        <span>Nueva Cotización</span>
     </a>
-   <!--  <a class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg shadow" href="#">
-        <i class="fas fa-filter"></i>
-        <span class="ml-3">FILTRAR?</span> BOTON FILTRAR POR AGREGARRRRRRR
-    </a> -->
+
+    <!-- Search Bar -->
+    <div class="flex-1 md:max-w-md">
+        <div class="relative">
+            <input type="text" id="search-input" placeholder="Buscar por cliente, proyecto..."
+                class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition duration-150">
+            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            <div id="search-spinner" class="hidden absolute right-3 top-1/2 transform -translate-y-1/2">
+                <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
+                </svg>
+            </div>
+        </div>
+    </div>
 </div>
-<div class="overflow-x-auto shadow-xl rounded-lg border mt-4 border-gray-100">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-blue-900 text-white">
+
+<!-- Page Header -->
+<div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-800">Dashboard de Cotizaciones</h1>
+</div>
+
+<!-- Main Content -->
+<div class="w-full">
+    <main class="w-full">
+        <div class="overflow-x-auto shadow-xl rounded-lg border border-gray-100 bg-white">
+            <table id="cotizaciones-table" class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-100 border-b-2 border-gray-300">
                     <tr>
-                        <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider w-16">ID</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider min-w-[250px]">Cliente / Proyecto</th>
-                        <th class="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider w-32">Fecha Creación</th>
-                        <th class="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider w-32">Costo Crudo Total</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider w-32">Creado Por</th>
-                        <th class="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider w-20">Acciones</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            ID</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            ESTADO</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            CLIENTE / PROYECTO</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            FECHA CREACIÓN</th>
+                        <th class="px-4 py-3 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            COSTO CRUDO TOTAL</th>
+                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            ACCIONES</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-100">
+                <tbody id="cotizaciones-tbody" class="bg-white divide-y divide-gray-100">
                     {% for cotizacion in cotizaciones %}
-                        <tr class="hover:bg-blue-50/50 transition duration-100">
-                            <td class="px-3 py-3 text-sm font-bold text-[#002B5B]">{{ cotizacion.id }}</td>
-                            <td class="px-3 py-3 text-sm text-gray-900">{{ cotizacion.proyecto_nombre }}</td>
-                            <td class="px-3 py-3 text-sm text-center text-gray-600">{{ cotizacion.fecha_creacion|date:"d-M-Y" }}</td>
-                            <td class="px-3 py-3 text-sm font-semibold text-red-600 text-right">$ {{ cotizacion.total_costo|floatformat:2 }}</td>
-                            <td class="px-3 py-3 text-sm text-gray-700">{{ cotizacion.cliente.nombre|default:"N/A" }}</td>
-                            <td class="px-3 py-3 text-center text-sm font-medium">
-                                <a href="{% url 'cotizador_app:detalle_cotizacion' %}" 
-                                   class="text-[#7CA8D5] hover:text-[#002B5B] transition duration-150 p-1 rounded-full">
-                                    <i class="fas fa-eye text-sm"></i>
+                    <tr class="hover:bg-blue-50/50 transition duration-100">
+                        <td class="px-3 py-3 text-sm font-bold text-[#002B5B]">{{ cotizacion.id }}</td>
+
+                        <!-- Estado Column with Color Badges -->
+                        <td class="px-3 py-3 text-sm">
+                            {% if cotizacion.estado == 'TERMINADO' %}
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <span class="w-2 h-2 rounded-full bg-green-500 mr-1.5"></span>
+                                Terminado
+                            </span>
+                            {% elif cotizacion.estado == 'CANCELADO' %}
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <span class="w-2 h-2 rounded-full bg-red-500 mr-1.5"></span>
+                                Cancelado
+                            </span>
+                            {% elif cotizacion.estado == 'POR_REVISAR' %}
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                <span class="w-2 h-2 rounded-full bg-orange-500 mr-1.5"></span>
+                                Por Revisar
+                            </span>
+                            {% else %}
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <span class="w-2 h-2 rounded-full bg-gray-400 mr-1.5"></span>
+                                Borrador
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="px-3 py-3 text-sm text-gray-900">
+                            <div class="font-medium">{{ cotizacion.proyecto_nombre }}</div>
+                            <div class="text-xs text-gray-500">{{ cotizacion.cliente.nombre|default:"N/A" }}</div>
+                        </td>
+
+                        <td class="px-3 py-3 text-sm text-center text-gray-600">
+                            {{ cotizacion.fecha_creacion|date:"d-M-Y" }}</td>
+                        <td class="px-3 py-3 text-sm font-semibold text-red-600 text-right">$
+                            {{ cotizacion.total_costo|floatformat:2 }}</td>
+                        <td class="px-3 py-3 text-center text-sm font-medium">
+                            <div class="flex items-center justify-center space-x-3">
+                                <a href="{% url 'cotizador_app:detalle_cotizacion' %}"
+                                    class="text-blue-600 hover:text-blue-800 transition duration-150"
+                                    title="Ver detalles">
+                                    <i class="fas fa-eye text-base"></i>
                                 </a>
-                                <a href="{% url 'cotizador_app:generar_pdf' cotizacion.id %}" 
-                                   class="text-[#7CA8D5] hover:text-[#002B5B] transition duration-150 p-1 rounded-full">
+                                <a href="{% url 'cotizador_app:generar_pdf' cotizacion.id %}"
+                                    class="text-green-600 hover:text-green-800 transition duration-150"
+                                    title="Descargar PDF">
                                     <i class="fa-solid fa-download"></i>
+                                </a>
                                 <a href="{% url 'cotizador_app:eliminar_cotizacion' cotizacion.id %}"
-                                   class="text-[#7CA8D5] hover:text-[#002B5B] transition duration-150 p-1 rounded-full">
+                                    class="text-red-600 hover:text-red-800 transition duration-150" title="Eliminar">
                                     <i class="fa-solid fa-trash"></i>
                                 </a>
-                            </td>
-                        </tr>
+                            </div>
+                        </td>
+                    </tr>
                     {% empty %}
-                        <tr>
-                            <td colspan="6" class="text-center py-4">No hay cotizaciones registradas.</td>
-                        </tr>
+                    <tr id="empty-state">
+                        <td colspan="6" class="text-center py-8 text-gray-500">
+                            <i class="fas fa-inbox text-4xl mb-2 text-gray-300"></i>
+                            <p class="text-sm">No hay cotizaciones registradas.</p>
+                        </td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+    </main>
 </div>
+
 {% endblock %}

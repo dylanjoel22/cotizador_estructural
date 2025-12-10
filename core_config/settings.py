@@ -47,7 +47,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+<<<<<<< HEAD
     # 'debug_toolbar',  # ✅ Django Debug Toolbar (solo desarrollo)
+=======
+    # 'debug_toolbar',  # ✅ Deshabilitado temporalmente - causa conflictos
+>>>>>>> 8a07e58d7d74ad354908cb7aec05c56136745353
     'widget_tweaks',
     'django_vite',
     'rest_framework',
@@ -62,7 +66,11 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware', # RAILWAY
     'django.middleware.common.CommonMiddleware', #RAILWAY
+<<<<<<< HEAD
     # 'debug_toolbar.middleware.DebugToolbarMiddleware',  # ✅ Debug Toolbar (debe estar temprano)
+=======
+    # 'debug_toolbar.middleware.DebugToolbarMiddleware',  # ✅ Deshabilitado temporalmente
+>>>>>>> 8a07e58d7d74ad354908cb7aec05c56136745353
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
