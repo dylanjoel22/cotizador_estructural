@@ -1,24 +1,24 @@
 # nixpacks.toml
 
 [phases.setup]
-# Instalar Python, pip, Node.js y PostgreSQL
+# Instalar Python (incluye pip), Node.js, y PostgreSQL
 nixPkgs = ["python312", "nodejs_20", "postgresql"]
 
 [phases.install]
 # Instalar dependencias de Python y Node
 cmds = [
-  "pip install -r requirements.txt",
-  "npm install --prefix frontend"
+    # **CORRECCIÓN:** Usar "python -m pip" para resolver "pip: command not found"
+    "python -m pip install -r requirements.txt", 
+    "npm install --prefix frontend"
 ]
 
 [phases.build]
 # Construir el frontend si es necesario
 cmds = [
-  "npm run build --prefix frontend",
-  "python manage.py collectstatic --noinput"
+    "npm run build --prefix frontend",
+    "python manage.py collectstatic --noinput"
 ]
 
 [start]
 # Iniciar Django con gunicorn
 cmd = "gunicorn core_config.wsgi:application --bind 0.0.0.0:8000"
-
