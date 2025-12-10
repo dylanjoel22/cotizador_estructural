@@ -10,9 +10,21 @@ from django.utils import timezone
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 from decimal import Decimal
-from usuarios_app.models import Cliente
-from .constants import METROS_POR_BARRA  # ✅ FIX MEDIO-003
 
+# Constante para barras estándar
+METROS_POR_BARRA = Decimal('6.00')
+
+
+class Cliente(models.Model):
+    nombre = models.CharField(max_length=200)
+    rut = models.CharField(max_length=20, blank=True)
+    empresa = models.CharField(max_length=200, blank=True)
+    telefono = models.CharField(max_length=20, blank=True)
+    email = models.EmailField(blank=True)
+    direccion = models.TextField(blank=True)
+    
+    def __str__(self):
+        return self.nombre
 
 
 class Cotizacion(models.Model):

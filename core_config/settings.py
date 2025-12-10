@@ -47,7 +47,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'debug_toolbar',  # ✅ Django Debug Toolbar (solo desarrollo)
     'widget_tweaks',
     'django_vite',
     'rest_framework',
@@ -62,7 +61,6 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware', # RAILWAY
     'django.middleware.common.CommonMiddleware', #RAILWAY
-    'debug_toolbar.middleware.DebugToolbarMiddleware',  # ✅ Debug Toolbar (debe estar temprano)
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
