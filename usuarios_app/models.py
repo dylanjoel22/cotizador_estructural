@@ -122,6 +122,13 @@ class PersonaContacto(models.Model):
     )
     
     email = models.EmailField(max_length=100, verbose_name="Correo Electrónico")
+    
+    rol = models.CharField(
+        max_length=100, 
+        verbose_name="Rol o Cargo",
+        help_text="Ejemplo: Gerente de Compras, Ingeniero de Proyectos, etc."
+    )
+    
     telefono = models.CharField(max_length=20, verbose_name="Número de Teléfono", validators=[validar_telefono])
     
     # === Foreign Key: La Relación con Cliente ===

@@ -1,6 +1,9 @@
 # Ignorar carpetas de dependencias
-# frontend/node_modules/
+frontend/node_modules/
+staticfiles
 venv/
+env/
+.env
 
 # Ignorar archivos de Python
 __pycache__/
@@ -12,3 +15,6 @@ __pycache__/
 # Ignorar archivos de logs y caché
 npm-debug.log*
 .DS_Store
+
+*.log
+*.pot

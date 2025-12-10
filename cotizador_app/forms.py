@@ -17,18 +17,15 @@ class CotizacionForm(forms.ModelForm):
         model = Cotizacion
         fields = [
             'cliente', 
-            'proyecto_nombre', 
-            # 'fecha_entrega_estimada' y 'porcentaje_margen' han sido eliminados del modelo.
+            'proyecto_nombre',
             'notas_internas',
             'total_costo', 
-            # Incluimos los campos JSON del modelo
             'structural_items_json',
             'overhead_items_json',
         ]
         
         widgets = {
             'notas_internas': forms.Textarea(attrs={'rows': 4}),
-            # Definimos los campos JSON como HiddenInput para que JavaScript los pueda poblar
             'structural_items_json': forms.HiddenInput(),
             'overhead_items_json': forms.HiddenInput(),
         }

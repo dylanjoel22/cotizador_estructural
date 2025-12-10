@@ -21,8 +21,7 @@ class ClienteForm(forms.ModelForm):
         widgets = {
             # --- WIDGETS DE TEXTO ---
             'nombre': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded-lg focus:ring-[#7CA8D5] focus:border-[#7CA8D5]'}),
-            'rut': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded-lg focus:ring-[#7CA8D5] focus:border-[#7CA8D5]',
-                                          'placeholder': 'Ejemplo: 12.345.678-K'}),
+            'rut': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded-lg focus:ring-[#7CA8D5] focus:border-[#7CA8D5]'}),
             'codigo_cliente': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded-lg focus:ring-[#7CA8D5] focus:border-[#7CA8D5]'}),
             'telefono': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded-lg focus:ring-[#7CA8D5] focus:border-[#7CA8D5]'}),
             'ciudad': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded-lg focus:ring-[#7CA8D5] focus:border-[#7CA8D5]'}),
@@ -40,11 +39,11 @@ class PersonaContactoForm(forms.ModelForm):
         exclude = ['cliente']
         # CORRECCIÓN: Removido 'cliente' de fields ya que está en exclude
         # No se puede usar exclude Y fields con el mismo campo
-        fields = ['nombre', 'rut', 'email', 'telefono']
+        fields = ['nombre', 'rut', 'email', 'rol', 'telefono']
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded-lg focus:ring-[#7CA8D5] focus:border-[#7CA8D5]'}),
-            'rut': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded-lg focus:ring-[#7CA8D5] focus:border-[#7CA8D5]',
-                                          'placeholder': 'Ejemplo: 12.345.678-K'}),
+            'rut': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded-lg focus:ring-[#7CA8D5] focus:border-[#7CA8D5]'}),
             'email': forms.EmailInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded-lg focus:ring-[#7CA8D5] focus:border-[#7CA8D5]'}),
+            'rol': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded-lg focus:ring-[#7CA8D5] focus:border-[#7CA8D5]'}),
             'telefono': forms.TextInput(attrs={'class': 'w-full p-2 border border-gray-300 rounded-lg focus:ring-[#7CA8D5] focus:border-[#7CA8D5]'}),
         }

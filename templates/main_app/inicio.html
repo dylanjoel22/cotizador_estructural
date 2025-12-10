@@ -2,69 +2,64 @@
 {% block page_title %}Menu Principal{% endblock %}
 {% block content %}
 
+<!-- Accesos Rápidos -->
+<div class="mb-8">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+        <i class="fas fa-bolt text-yellow-500 mr-3"></i>
+        Accesos Rápidos
+    </h2>
 
-<!-- Tarjetas de estadísticas -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-gray-500 text-sm font-medium">Cotizaciones</p>
-                <p class="text-3xl font-bold text-gray-800 mt-2">24</p>
-                <p class="text-green-600 text-xs mt-1">
-                    <i class="fas fa-arrow-up"></i> +12% este mes
-                </p>
-            </div>
-            <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center">
-                <i class="fas fa-file-invoice text-blue-600 text-2xl"></i>
-            </div>
-        </div>
-    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-gray-500 text-sm font-medium">Clientes</p>
-                <p class="text-3xl font-bold text-gray-800 mt-2">156</p>
-                <p class="text-green-600 text-xs mt-1">
-                    <i class="fas fa-arrow-up"></i> +8 nuevos
-                </p>
+        <!-- Nueva Cotización -->
+        <a href="{% url 'cotizador_app:crear_cotizacion' %}"
+            style="display: block; background: #2563eb; color: white; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); padding: 2rem; text-decoration: none; transition: all 0.3s; cursor: pointer;"
+            onmouseover="this.style.background='#1d4ed8'; this.style.transform='translateY(-4px)'; this.style.boxShadow='0 20px 25px -5px rgba(0,0,0,0.1)'"
+            onmouseout="this.style.background='#2563eb'; this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 15px -3px rgba(0,0,0,0.1)'">
+            <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+                <div
+                    style="width: 64px; height: 64px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+                    <i class="fas fa-file-invoice" style="font-size: 1.875rem; color: white;"></i>
+                </div>
+                <h3 style="font-size: 1.25rem; font-weight: bold; margin-bottom: 0.5rem; color: white;">Nueva Cotización
+                </h3>
+                <p style="color: #dbeafe; font-size: 0.875rem;">Crear una nueva cotización de proyecto</p>
             </div>
-            <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center">
-                <i class="fas fa-users text-green-600 text-2xl"></i>
-            </div>
-        </div>
-    </div>
+        </a>
 
-    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-500">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-gray-500 text-sm font-medium">Pendientes</p>
-                <p class="text-3xl font-bold text-gray-800 mt-2">12</p>
-                <p class="text-yellow-600 text-xs mt-1">
-                    <i class="fas fa-clock"></i> Por revisar
-                </p>
+        <!-- Ver Clientes -->
+        <a href="{% url 'clientes' %}"
+            style="display: block; background: #16a34a; color: white; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); padding: 2rem; text-decoration: none; transition: all 0.3s; cursor: pointer;"
+            onmouseover="this.style.background='#15803d'; this.style.transform='translateY(-4px)'; this.style.boxShadow='0 20px 25px -5px rgba(0,0,0,0.1)'"
+            onmouseout="this.style.background='#16a34a'; this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 15px -3px rgba(0,0,0,0.1)'">
+            <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+                <div
+                    style="width: 64px; height: 64px; background: #22c55e; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+                    <i class="fas fa-users" style="font-size: 1.875rem; color: white;"></i>
+                </div>
+                <h3 style="font-size: 1.25rem; font-weight: bold; margin-bottom: 0.5rem; color: white;">Gestionar
+                    Clientes</h3>
+                <p style="color: #dcfce7; font-size: 0.875rem;">Ver y administrar clientes</p>
             </div>
-            <div class="w-14 h-14 bg-yellow-100 rounded-full flex items-center justify-center">
-                <i class="fas fa-hourglass-half text-yellow-600 text-2xl"></i>
-            </div>
-        </div>
-    </div>
+        </a>
 
-    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-gray-500 text-sm font-medium">Total Ventas</p>
-                <p class="text-3xl font-bold text-gray-800 mt-2">$45.2K</p>
-                <p class="text-green-600 text-xs mt-1">
-                    <i class="fas fa-arrow-up"></i> +15% vs anterior
-                </p>
+        <!-- Perfiles ICHA -->
+        <a href="{% url 'materiales_icha' %}"
+            style="display: block; background: #ea580c; color: white; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); padding: 2rem; text-decoration: none; transition: all 0.3s; cursor: pointer;"
+            onmouseover="this.style.background='#c2410c'; this.style.transform='translateY(-4px)'; this.style.boxShadow='0 20px 25px -5px rgba(0,0,0,0.1)'"
+            onmouseout="this.style.background='#ea580c'; this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 15px -3px rgba(0,0,0,0.1)'">
+            <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+                <div
+                    style="width: 64px; height: 64px; background: #f97316; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+                    <i class="fas fa-database" style="font-size: 1.875rem; color: white;"></i>
+                </div>
+                <h3 style="font-size: 1.25rem; font-weight: bold; margin-bottom: 0.5rem; color: white;">Perfiles ICHA
+                </h3>
+                <p style="color: #fed7aa; font-size: 0.875rem;">Consultar perfiles estructurales</p>
             </div>
-            <div class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center">
-                <i class="fas fa-dollar-sign text-purple-600 text-2xl"></i>
-            </div>
-        </div>
+        </a>
+
     </div>
 </div>
-
 
 {% endblock %}
