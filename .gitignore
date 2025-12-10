@@ -1,6 +1,6 @@
 # Ignorar carpetas de dependencias
 # frontend/node_modules/
-staticfiles
+# staticfiles
 venv/
 env/
 .env
